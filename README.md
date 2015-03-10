@@ -1,8 +1,8 @@
 # Hypnoscorer
 Coming soon...
 
-# Installation
+## Installation
 Coming soon...
 
-# Usage
+## Usage
 Coming soon...
