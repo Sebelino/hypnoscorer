@@ -1,5 +1,8 @@
-# Sebastian's Sleep Scorer
-Automated sleep stage classification using unsupervised approach.
+# Hypnoscorer
+Coming soon...
+
+# Installation
+Coming soon...
 
 # Usage
 Coming soon...
