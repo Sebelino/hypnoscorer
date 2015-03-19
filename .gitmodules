@@ -1,0 +1,3 @@
+[submodule "lib/wfdb-toolbox"]
+	path = lib/wfdb-toolbox
+	url = git@github.com:ikarosilva/wfdb-app-toolbox
