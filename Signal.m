@@ -9,6 +9,12 @@ classdef Signal
             self.Graph = cell2struct(cellarray,{'Time','Quantity'},2);
             self.Unit = unit;
         end
+        function time=time(self)
+            time = [self.Graph.Time]';
+        end
+        function quantity=quantity(self)
+            quantity = [self.Graph.Quantity]';
+        end
         function segments=segment(self,len)
             m = mod([self.Graph.Time]',len);
             timeintervals = accumarray(cumsum([0;diff(m(:))] < 0)+1,m,[],@(x) {x});
