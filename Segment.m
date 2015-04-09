@@ -7,7 +7,10 @@ classdef Segment < Signal
         end
         % Extract a set of features
         function features=features(self)
-            features = [mean(self.quantity)];
+            fs = struct( ...
+                'Mean',mean(self.quantity) ...
+            );
+            features = Featurevector(fs);
         end
     end
 end
