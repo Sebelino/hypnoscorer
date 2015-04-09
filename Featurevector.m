@@ -12,13 +12,10 @@ classdef Featurevector
     end
     methods
         function self = Featurevector(featureStruct)
-            self.Mean = featureStruct.Mean;
-            self.Variance = featureStruct.Variance;
-            self.StandardDeviation = featureStruct.StandardDeviation;
-            self.Skewness = featureStruct.Skewness;
-            self.Kurtosis = featureStruct.Kurtosis;
-            % TODO for p in properties(fs): self.p = fs.p
-            %features = fieldnames(self);
+            features = fieldnames(self);
+            for i = 1:self.dimension
+                self.(features{i}) = featureStruct.(features{i})
+            end
         end
         function count = dimension(self)
             count = numel(fieldnames(self))
