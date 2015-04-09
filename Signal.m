@@ -1,5 +1,5 @@
 classdef Signal
-    properties
+    properties(SetAccess='private')
         Graph
         Unit
     end
@@ -26,7 +26,7 @@ classdef Signal
             end
             segmentquantities = segmentquantities';
             zip = num2cell([timeintervals,segmentquantities],2);
-            segments = arrayfun(@(p){Signal(p{1}{1},self.Unit,p{1}{2})},zip);
+            segments = arrayfun(@(p){Segment(p{1}{1},self.Unit,p{1}{2})},zip);
             segments = [segments{:}]';
         end
         function features=features(self)
