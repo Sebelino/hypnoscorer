@@ -29,8 +29,5 @@ classdef Signal
             segments = arrayfun(@(p){Segment(p{1}{1},self.Unit,p{1}{2})},zip);
             segments = [segments{:}]';
         end
-        function features=features(self)
-            features = [mean(self.quantity)];
-        end
     end
 end
