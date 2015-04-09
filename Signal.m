@@ -1,5 +1,5 @@
 classdef Signal
-    properties
+    properties(SetAccess='private')
         Graph
         Unit
     end
