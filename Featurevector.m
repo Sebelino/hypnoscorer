@@ -14,11 +14,11 @@ classdef Featurevector
         function self = Featurevector(featureStruct)
             features = fieldnames(self);
             for i = 1:self.dimension
-                self.(features{i}) = featureStruct.(features{i})
+                self.(features{i}) = featureStruct.(features{i});
             end
         end
         function count = dimension(self)
-            count = numel(fieldnames(self))
+            count = numel(fieldnames(self));
         end
     end
 end
