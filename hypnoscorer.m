@@ -22,6 +22,7 @@ labels(labels == '1') = 'W';
 labels(labels == '0') = 'S';
 
 plot3D(efs,labels)
+animate()
 
 %svm = SVM()
 %svm.train(efs,)
