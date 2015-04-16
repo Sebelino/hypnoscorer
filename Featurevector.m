@@ -16,7 +16,7 @@ classdef Featurevector < matlab.mixin.CustomDisplay
         function featurevector = select(self)
             % Reduce the dimension, selecting only the most relevant features
             vector = self.Vector;
-            filteredfields = {'Mean' 'Variance'}';
+            filteredfields = {'Mean' 'Variance','Skewness'}';
             for f = setdiff(fieldnames(self.Vector),filteredfields)
                 vector = rmfield(vector,f);
             end

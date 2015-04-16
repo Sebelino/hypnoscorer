@@ -21,7 +21,7 @@ labels = num2str(labels);
 labels(labels == '1') = 'W';
 labels(labels == '0') = 'S';
 
-plot2D(efs,labels)
+plot3D(efs,labels)
 
 %svm = SVM()
 %svm.train(efs,)
