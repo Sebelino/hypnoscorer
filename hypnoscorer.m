@@ -16,10 +16,10 @@ clear tm signal Fs siginfo physicaleeg eeg ss sfs
 
 [ann,type,subtype,chan,num,comments] = rdann(recordpath,'st');
 annotations = [char([comments{:}]),num2str(ann)];
-labels = arrayfun(@(a)(ismember('W',a)),[comments{:}]');
-labels = num2str(labels);
-labels(labels == '1') = 'W';
-labels(labels == '0') = 'S';
+labels = char([comments{:}]');
+labels = labels(:,1);
+%labels = labels(ismember(labels,'WR1234'));
+%labels(labels == 'M') = '4';
 
 plot3D(efs,labels)
 animate()

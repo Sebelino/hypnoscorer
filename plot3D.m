@@ -6,7 +6,7 @@ function plot3D(featurevectors,labels)
     figure
     whitebg(1,'k')
     h = gscatter(means,variances,labels);
-    labelset = unique(labels);
+    labelset = [h.DisplayName]';
     for k = 1:numel(labelset)
         set(h(k),'ZData',skewnesses(labels==labelset(k)));
     end
