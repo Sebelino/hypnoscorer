@@ -1,9 +1,12 @@
 function plot2D(featurevectors,labels)
     vs = [featurevectors.Vector]';
-    means = [vs.Mean]';
-    variances = [vs.Variance]';
+    features = fieldnames(vs);
+    xaxis = [vs.(features{1})]';
+    yaxis = [vs.(features{2})]';
     figure
     whitebg(1,'k')
-    gscatter(means,variances,labels)
+    gscatter(xaxis,yaxis,labels)
+    xlabel(features{1})
+    ylabel(features{2})
 end
 
