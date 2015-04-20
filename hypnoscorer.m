@@ -7,12 +7,20 @@ physicaleeg = signal(:,3);
 eeg = Signal(tm',siginfo(3).Units,physicaleeg);
 ss = eeg.segment(30);
 
-sfs = arrayfun(@(s){s.features.select},ss);
+fs = arrayfun(@(s){s.features},ss);
+fs = [fs{:}]';
+
+fm = [fs.Vector]';
+fm = [fm.Mean;fm.Variance;fm.StandardDeviation;fm.Skewness;fm.Kurtosis]';
+covariance = cov(fm);
+[V,D] = eigs(covariance,2);
+
+sfs = arrayfun(@(f){f.select},fs);
 sfs = [sfs{:}]';
 
 efs = sfs; % Unsupervised processing here
 
-clear tm signal Fs siginfo physicaleeg eeg ss sfs
+clear tm signal Fs siginfo physicaleeg eeg ss fs sfs
 
 [ann,type,subtype,chan,num,comments] = rdann(recordpath,'st');
 annotations = [char([comments{:}]),num2str(ann)];
