@@ -5,7 +5,8 @@ recordpath = 'data/slp01a/slp01a';
 physicaleeg = signal(:,3);
 
 eeg = Signal(tm',siginfo(3).Units,physicaleeg);
-ss = eeg.segment(30);
+segmentsperannotation = 1;
+ss = eeg.segment(30/segmentsperannotation);
 
 fs = arrayfun(@(s){s.features},ss);
 fs = [fs{:}]';
@@ -26,11 +27,13 @@ clear tm signal Fs siginfo physicaleeg eeg ss fs sfs
 annotations = [char([comments{:}]),num2str(ann)];
 labels = char([comments{:}]');
 labels = labels(:,1);
+labels = repmat(labels,1,segmentsperannotation)';
+labels = labels(:);
 %labels = labels(ismember(labels,'WR1234'));
 %labels(labels == 'M') = '4';
 
-plot3D(efs,labels)
-animate()
+%plot3D(efs,labels)
+%animate()
 
 %svm = SVM()
 %svm.train(efs,)
