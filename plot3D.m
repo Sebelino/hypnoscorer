@@ -1,16 +1,19 @@
 function plot3D(featurevectors,labels)
     vs = [featurevectors.Vector]';
-    means = [vs.Mean]';
-    variances = [vs.Variance]';
-    skewnesses = [vs.Skewness]';
+    features = fieldnames(vs);
+    xaxis = [vs.(features{1})]';
+    yaxis = [vs.(features{2})]';
+    zaxis = [vs.(features{3})]';
     figure
     whitebg(1,'k')
-    h = gscatter(means,variances,labels);
+    h = gscatter(xaxis,yaxis,labels);
     labelset = [h.DisplayName]';
     for k = 1:numel(labelset)
-        set(h(k),'ZData',skewnesses(labels==labelset(k)));
+        set(h(k),'ZData',zaxis(labels==labelset(k)));
     end
-    zlabel('skewnesses')
+    xlabel(features{1})
+    ylabel(features{2})
+    zlabel(features{3})
     view(3)
 end
 
