@@ -1,5 +1,5 @@
 % Generate data + labels
-quantity = 10;
+quantity = 1000;
 rands1 = [rand(quantity,1),2*pi*rand(quantity,1)];
 rands2 = [rand(quantity,1),2*pi*rand(quantity,1)];
 polarands1 = [rands1(:,1),rands1(:,1)].*[cos(rands1(:,2)),sin(rands1(:,2))];
@@ -22,9 +22,12 @@ plot(sv(:,1),sv(:,2),'yo','MarkerSize',3)
 
 % Plot SVM line
 w = sum(repmat(m.Alpha,1,2).*sv);
+svcentroid = sum(sv)/size(sv,1);
+bias = w*svcentroid'/w(2);
 xlimits = xlim;
 linex = linspace((3*xlimits(1)+xlimits(2))/4,(xlimits(1)+3*xlimits(2))/4);
-liney = -w(1)*linex/w(2)-m.Bias;
+%liney = -w(1)*linex/w(2)-m.Bias;
+liney = -w(1)*linex/w(2)+bias;
 plot(linex,liney)
 
 
