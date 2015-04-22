@@ -22,6 +22,11 @@ classdef Featurevector < matlab.mixin.CustomDisplay
             end
             featurevector = Featurevector(vector);
         end
+        function matrix = matrix(self)
+            % The set of features in the form of a NxM matrix, where N is the number of vectors and M
+            % is the number of features
+            matrix = cell2mat(struct2cell([self.Vector]')');
+        end
     end
     methods(Access=protected)
         function displayScalarObject(self)
