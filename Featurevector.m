@@ -22,6 +22,14 @@ classdef Featurevector < matlab.mixin.CustomDisplay
             end
             featurevector = Featurevector(vector);
         end
+        function components = pca(self)
+            m = self.matrix();
+            [coeff score latent] = princomp(m);
+            numberofcomponents = 3;
+            components = num2cell(score(:,1:numberofcomponents),2);
+            components = arrayfun(@(v){Featurevector(struct('PC1', v{1}(1), 'PC2', v{1}(2), 'PC3', v{1}(3)))},components);
+            components = [components{:}]';
+        end
         function matrix = matrix(self)
             % The set of features in the form of a NxM matrix, where N is the number of vectors and M
             % is the number of features

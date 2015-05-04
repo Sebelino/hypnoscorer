@@ -11,15 +11,12 @@ ss = eeg.segment(30/segmentsperannotation);
 fs = arrayfun(@(s){s.features},ss);
 fs = [fs{:}]';
 
-fm = [fs.Vector]';
-fm = [fm.Mean;fm.Variance;fm.StandardDeviation;fm.Skewness;fm.Kurtosis]';
-covariance = cov(fm);
-[V,D] = eigs(covariance,2);
-
-sfs = arrayfun(@(f){f.select},fs);
 sfs = [sfs{:}]';
 
-efs = sfs; % Unsupervised processing here
+% PCA
+cfs = sfs.pca;
+
+efs = cfs; % Unsupervised processing here
 
 clear tm signal Fs siginfo physicaleeg eeg ss fs sfs
 
