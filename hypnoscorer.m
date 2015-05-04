@@ -11,6 +11,8 @@ ss = eeg.segment(30/segmentsperannotation);
 fs = arrayfun(@(s){s.features},ss);
 fs = [fs{:}]';
 
+% Feature selection
+sfs = arrayfun(@(f){f.select('Mean','Variance','StandardDeviation','Skewness','Kurtosis')},fs);
 sfs = [sfs{:}]';
 
 % PCA

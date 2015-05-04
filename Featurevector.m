@@ -13,10 +13,13 @@ classdef Featurevector < matlab.mixin.CustomDisplay
             % The number of features
             count = numel(fieldnames(self));
         end
-        function featurevector = select(self)
+        function featurevector = select(self,varargin)
             % Reduce the dimension, selecting only the most relevant features
             vector = self.Vector;
-            filteredfields = {'Mean' 'Variance','Skewness'}';
+            filteredfields = varargin;
+            if length(filteredfields) == 0
+                filteredfields = fieldnames(self.Vector);
+            end
             for f = setdiff(fieldnames(self.Vector),filteredfields)
                 vector = rmfield(vector,f);
             end
