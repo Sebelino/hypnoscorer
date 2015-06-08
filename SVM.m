@@ -17,7 +17,7 @@ classdef SVM < Classifier
             % Plot vectors
             plot(sv(:,1),sv(:,2),'yo','MarkerSize',5)
             % Plot hyperplane
-            w = sum(repmat(self.Model.Alpha,1,2).*sv);
+            w = sum(repmat(self.Model.Alpha,1,size(sv,2)).*sv);
             svcentroid = sum(sv)/size(sv,1);
             bias = w*svcentroid'/w(2);
             xlimits = xlim;

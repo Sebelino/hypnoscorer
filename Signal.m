@@ -26,7 +26,7 @@ classdef Signal
         function segments=segment(self,len)
             % Divide the signal into several segments for further analysis
             m = mod([self.Graph.Time]',len);
-            timeintervals = accumarray(cumsum([0;diff(m(:))] < 0)+1,m,[],@(x) {x});
+            timeintervals = accumarray(cumsum([0;diff(m(:))] < 0)+1,m,[],@(x){x});
             segmentlengths = cellfun(@length,timeintervals);
             segmentindices = cumsum(segmentlengths)-segmentlengths+1;
             quantities = [self.Graph.Quantity]';
