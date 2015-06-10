@@ -24,10 +24,12 @@ classdef Hypnoscorer
                 matchindices = find(cellfun(@(y)(length(y) == 2), matches));
                 record = records{1};
                 if length(matchindices) > 0
-                    record = records(matchindices(1));
+                    record = records{matchindices(1)};
                 end
             end
-            [eeg,self.Labels] = signalread([datadir,record]);
+            recordpath = [datadir,record];
+            disp(['Reading ',recordpath])
+            [eeg,self.Labels] = signalread(recordpath);
             self.Segments = eeg.segment(30/self.SegmentsPerAnnotation);
             clear eeg
 
@@ -39,7 +41,7 @@ classdef Hypnoscorer
             self.SelectedFeaturespace = [self.SelectedFeaturespace{:}]';
 
             % PCA
-            self.TransformedFeaturespace = self.SelectedFeaturespace.pca(2);
+            self.TransformedFeaturespace = self.SelectedFeaturespace.pca(3);
 
             self.ExtendedFeaturespace = self.TransformedFeaturespace; % Unsupervised processing here
 
@@ -50,6 +52,9 @@ classdef Hypnoscorer
             self.Bilabels = self.Labels;
             self.Bilabels(ismember(self.Labels,['4','3','M'])) = 'D';
             self.Bilabels(ismember(self.Labels,['1','2','R','W'])) = 'S';
+        end
+        function plot2D(self)
+            plot2D(self.ExtendedFeaturespace,self.Labels)
         end
         function plot3D(self)
             plot3D(self.ExtendedFeaturespace,self.Labels)
