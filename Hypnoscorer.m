@@ -21,15 +21,6 @@ classdef Hypnoscorer
             self.Featurespace = arrayfun(@(s){s.features},self.Segments);
             self.Featurespace = [self.Featurespace{:}]';
 
-            % Feature selection
-            self.SelectedFeaturespace = arrayfun(@(f){f.select('Mean','Variance','StandardDeviation','Skewness','Kurtosis')},self.Featurespace);
-            self.SelectedFeaturespace = [self.SelectedFeaturespace{:}]';
-
-            % PCA
-            self.TransformedFeaturespace = self.SelectedFeaturespace.pca(3);
-
-            self.ExtendedFeaturespace = self.TransformedFeaturespace; % Unsupervised processing goes here
-
             self.Labels = repmat(self.Labels,1,self.SegmentsPerAnnotation)';
             self.Labels = self.Labels(:);
             %self.Labels = self.Labels(ismember(self.Labels,'WR1234'));
@@ -39,11 +30,25 @@ classdef Hypnoscorer
             self.Bilabels(ismember(self.Labels,['1','2','R','W'])) = 'S';
             toc
         end
-        function plot2D(self)
-            plot2D(self.ExtendedFeaturespace,self.Labels)
-        end
-        function plot3D(self)
-            plot3D(self.ExtendedFeaturespace,self.Labels)
+        function examine(self,dimensions,mode,features)
+            self.SelectedFeaturespace = arrayfun(@(f){f.select(features{:})},self.Featurespace);
+            self.SelectedFeaturespace = [self.SelectedFeaturespace{:}]';
+            componentcount = min(3,size(features,2)+3*abs(1-sign(size(features,2))));
+            self.TransformedFeaturespace = self.SelectedFeaturespace.pca(componentcount);
+            self.ExtendedFeaturespace = self.TransformedFeaturespace; % Unsupervised processing goes here
+
+            if mode == 's'
+                fs = self.SelectedFeaturespace;
+            elseif mode == 't'
+                fs = self.TransformedFeaturespace;
+            elseif mode == 'e'
+                fs = self.ExtendedFeaturespace;
+            end
+            if dimensions == 2
+                plot2D(fs,self.Labels)
+            elseif dimensions == 3
+                plot3D(fs,self.Labels)
+            end
         end
         function animate(self)
             animate()
