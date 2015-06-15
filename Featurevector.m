@@ -27,7 +27,8 @@ classdef Featurevector < matlab.mixin.CustomDisplay
         end
         function components = pca(self, numberofcomponents)
             m = self.matrix();
-            [coeff score latent] = princomp(m);
+            normalized = (m-repmat(min(m),size(m,1),1))./repmat(max(m)-min(m),size(m,1),1);
+            [coeff score latent] = princomp(normalized);
             components = num2cell(score(:,1:numberofcomponents),2);
             if numberofcomponents == 2
                 components = arrayfun(@(v){Featurevector(struct('PC1', v{1}(1), 'PC2', v{1}(2)))},components);
