@@ -157,6 +157,8 @@ classdef Hypnoscorer < handle
                     diff = [stream.predictedset.Label]'-[stream.testset.Label]';
                     diff(diff~=0) = 1;
                     stream.ratio = 1-sum(diff)/size(diff,1);
+                else
+                    error(['Could not interpret command "',tokens{1},'".'])
                 end
             end
         end
