@@ -1,4 +1,4 @@
-classdef Hypnoscorer
+classdef Hypnoscorer < handle
     properties
         Record
         Labels
@@ -9,6 +9,7 @@ classdef Hypnoscorer
         TransformedFeaturespace
         ExtendedFeaturespace
         Bilabels
+        SVM
     end
 
     methods
@@ -30,42 +31,149 @@ classdef Hypnoscorer
             self.Bilabels(ismember(self.Labels,['1','2','R','W'])) = 'S';
             toc
         end
-        function examine(self,dimensions,mode,features)
-            self.SelectedFeaturespace = arrayfun(@(f){f.select(features{:})},self.Featurespace);
-            self.SelectedFeaturespace = [self.SelectedFeaturespace{:}]';
-            componentcount = min(3,size(features,2)+3*abs(1-sign(size(features,2))));
-            self.TransformedFeaturespace = self.SelectedFeaturespace.pca(componentcount);
-            self.ExtendedFeaturespace = self.TransformedFeaturespace; % Unsupervised processing goes here
-
-            if mode == 's'
-                fs = self.SelectedFeaturespace;
-            elseif mode == 't'
-                fs = self.TransformedFeaturespace;
-            elseif mode == 'e'
-                fs = self.ExtendedFeaturespace;
+        function stream = exec(self,varargin)
+            % cmd A string describing what to do in UNIXy pipeline notation
+            % Examples:
+            % load slp | segment 3 | extract | select Mean Variance | plot
+            % load shh | segment 1 | extract | select Mean Variance | bundle 12RW 34M | keep 0.1
+            %          | partition 0.5 | balance | svm | eval | plot
+            if nargin == 1
+                throw('Expected at least one argument besides self.')
+            elseif nargin == 2
+                cmd = varargin{1};
+            elseif nargin == 3
+                stream = varargin{1};
+                cmd = varargin{2};
             end
-            if dimensions == 2
-                plot2D(fs,self.Labels)
-            elseif dimensions == 3
-                plot3D(fs,self.Labels)
+            pipeline = strsplit(cmd,'|');
+            for filter = pipeline
+                tokens = strsplit(strtrim(filter{:}));
+                if strcmp(tokens{1},'load')
+                    recordstr = tokens{2};
+                    [record,eeg,labels] = Hypnoscorer.readrecord(recordstr);
+                    stream = struct('eeg',eeg,'labels',labels);
+                elseif strcmp(tokens{1},'segment')
+                    segmentsperannotation = str2num(tokens{2});
+                    seconds = 30/segmentsperannotation;
+                    segments = stream.eeg.segment(seconds);
+                    labels = repmat(stream.labels',1,segmentsperannotation)';
+                    labeledsegments = arrayfun(@(i){segments(i).label(labels(i))},(1:size(segments,1)));
+                    labeledsegments = [labeledsegments{:}]';
+                    stream = labeledsegments;
+                elseif strcmp(tokens{1},'extract')
+                    fs = arrayfun(@(s){s.features},stream);
+                    fs = [fs{:}]';
+                    stream = fs;
+                elseif strcmp(tokens{1},'select')
+                    features = tokens(2:end);
+                    sfs = arrayfun(@(f){f.select(features{:})},stream);
+                    sfs = [sfs{:}]';
+                    stream = sfs;
+                elseif strcmp(tokens{1},'partition')
+                    ratio = str2num(tokens{2});
+                    trainingindices = randperm(size(stream,1),ratio*size(stream,1))';
+                    testindices = setdiff(1:size(stream,1),trainingindices)';
+                    trainedfs = stream(trainingindices);
+                    testedfs = stream(testindices);
+                    stream = struct('trainingset',trainedfs,'testset',testedfs);
+                elseif strcmp(tokens{1},'bundle')
+                    bundles = tokens(2:end);
+                    newlabel = 'A';
+                    for bundle = bundles
+                        indices = ismember([stream.Label],bundle{:})';
+                        newlabels = num2cell(repmat(newlabel,1,size(indices,1)));
+                        [stream(indices).Label] = newlabels{:};
+                        newlabel = char(newlabel+1);
+                    end
+                elseif strcmp(tokens{1},'keep')
+                    % Keep a certain random share of the stream and discard the rest
+                    ratio = str2num(tokens{2});
+                    indices = randperm(size(stream,1),ratio*size(stream,1));
+                    stream = stream(indices);
+                elseif strcmp(tokens{1},'balance')
+                    if isa(stream,'LabeledFeaturevector')
+                        % Make the number of vectors belonging to a label constant
+                        partition = stream.partition();
+                        cardinality = min(cellfun(@(p)(size(p,2)),partition.values));
+                        newstream = [];
+                        for part = partition.values
+                            indices = randperm(size(part{:},2),cardinality);
+                            newpart = part{:};
+                            newpart = newpart(indices);
+                            newstream = [newpart,newstream];
+                        end
+                        stream = newstream';
+                    elseif isfield(stream,'trainingset')
+                        % Make the number of training vectors belonging to a label constant
+                        partition = stream.trainingset.partition();
+                        cardinality = min(cellfun(@(p)(size(p,2)),partition.values));
+                        newset = [];
+                        for part = partition.values
+                            indices = randperm(size(part{:},2),cardinality);
+                            newpart = part{:};
+                            newpart = newpart(indices);
+                            newset = [newpart,newset];
+                        end
+                        stream.trainingset = newset';
+                    end
+                elseif strcmp(tokens{1},'pca')
+                    continue
+                elseif strcmp(tokens{1},'plot')
+                    if isa(stream,'LabeledFeaturevector')
+                        vs = [stream.Vector]';
+                        features = fieldnames(vs);
+                        xaxis = [vs.(features{1})]';
+                        yaxis = [vs.(features{2})]';
+                        labels = [stream.Label]';
+                        figure
+                        whitebg(1,'k')
+                        gscatter(xaxis,yaxis,labels)
+                        xlabel(features{1})
+                        ylabel(features{2})
+                    elseif isfield(stream,'trainingset') && isfield(stream,'testset')
+                        figure
+                        whitebg(1,'k')
+                        Hypnoscorer.plot(stream.trainingset,{})
+                        hold on
+                        Hypnoscorer.plot(stream.testset,{'','+','','off'})
+                        if isfield(stream,'predictedset')
+                            pfs = stream.predictedset;
+                            pfs = arrayfun(@(i){LabeledFeaturevector(pfs(i).Vector,pfs(i).Label)},(1:size(pfs,1)));
+                            pfs = [pfs{:}]';
+                            diff = [pfs.Label]'-[stream.testset.Label]';
+                            indices = find(diff);
+                            pfs = pfs(indices);
+                            Hypnoscorer.plot(pfs,{'y','o','','off'})
+                        end
+                    end
+                    if isfield(stream,'svm')
+                        stream.svm.plot()
+                    end
+                    return
+                elseif strcmp(tokens{1},'svm')
+                    stream.svm = SVM(stream.trainingset);
+                elseif strcmp(tokens{1},'eval')
+                    stream.predictedset = stream.svm.predict(stream.testset);
+                    diff = [stream.predictedset.Label]'-[stream.testset.Label]';
+                    diff(diff~=0) = 1;
+                    stream.ratio = 1-sum(diff)/size(diff,1);
+                end
             end
-        end
-        function animate(self)
-            animate()
-        end
-        function svm(self)
-            indices = find(ismember(self.Labels,['W','4']));
-            self.Labels = self.Labels(indices);
-            self.ExtendedFeaturespace = self.ExtendedFeaturespace(indices);
-
-            plot2D(self.ExtendedFeaturespace,self.Labels)
-
-            svm = SVM(self.ExtendedFeaturespace,self.Labels);
-            hold on
-            svm.plot()
         end
     end
     methods(Static, Access=private)
+        function plot(labeledfeatureset,style)
+            if isempty(labeledfeatureset)
+                return
+            end
+            vs = [labeledfeatureset.Vector]';
+            features = fieldnames(vs);
+            plotdata = [[vs.(features{1})]',[vs.(features{2})]',double([labeledfeatureset.Label]')];
+            plotdata = sortrows(plotdata,3);
+            gscatter(plotdata(:,1),plotdata(:,2),char(plotdata(:,3)),style{:})
+            xlabel(features{1})
+            ylabel(features{2})
+        end
         function [record,eeg,labels] = readrecord(spec)
             % Reads the record specified by the supplied parameter.
             datadir = 'data/';
@@ -73,15 +181,11 @@ classdef Hypnoscorer
             'slp01a/slp01a',
             'shhs/shhs1-200001'
             }; % TODO cache this data
+            matches = strfind(records,spec);
+            matchindices = find(cellfun(@(y)(length(y) == 2),matches));
             record = records{1};
-            if size(spec,2) == 1
-                substr = spec{1};
-                matches = strfind(records, substr);
-                matchindices = find(cellfun(@(y)(length(y) == 2), matches));
-                record = records{1};
-                if length(matchindices) > 0
-                    record = records{matchindices(1)};
-                end
+            if length(matchindices) > 0
+                record = records{matchindices(1)};
             end
             cachepath = Hypnoscorer.cachepath(record);
             if exist(cachepath)

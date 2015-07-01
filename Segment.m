@@ -5,6 +5,9 @@ classdef Segment < Signal
         function self = Segment(time,unit,recording)
             self = self@Signal(time,unit,recording);
         end
+        function labeledself = label(self,lab)
+            labeledself = LabeledSegment(self.time,self.Units,self.quantity,lab);
+        end
         % Extract a set of features
         function features=features(self)
             [activity,mobility,complexity] = self.hjorthparameters;
