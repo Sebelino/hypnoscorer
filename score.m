@@ -86,23 +86,24 @@ function stream = score(varargin)
         elseif strcmp(tokens{1},'pca')
             continue
         elseif strcmp(tokens{1},'plot')
+            figure
+            whitebg(1,'k')
+            hold on
+            if isfield(stream,'svm')
+                stream.svm.plot()
+            end
             if isa(stream,'LabeledFeaturevector')
                 vs = [stream.Vector]';
                 features = fieldnames(vs);
                 xaxis = [vs.(features{1})]';
                 yaxis = [vs.(features{2})]';
                 labels = [stream.Label]';
-                figure
-                whitebg(1,'k')
                 gscatter(xaxis,yaxis,labels)
                 xlabel(features{1})
                 ylabel(features{2})
             elseif isfield(stream,'trainingset') && isfield(stream,'testset')
-                figure
-                whitebg(1,'k')
-                plot(stream.trainingset,{})
-                hold on
-                plot(stream.testset,{'','+','','off'})
+                plot(stream.trainingset,{'','*','','off'})
+                plot(stream.testset,{'','.','','off'})
                 if isfield(stream,'predictedset')
                     pfs = stream.predictedset;
                     pfs = arrayfun(@(i){LabeledFeaturevector(pfs(i).Vector,pfs(i).Label)},(1:size(pfs,1)));
@@ -112,9 +113,6 @@ function stream = score(varargin)
                     pfs = pfs(indices);
                     plot(pfs,{'y','o','','off'})
                 end
-            end
-            if isfield(stream,'svm')
-                stream.svm.plot()
             end
             return
         elseif strcmp(tokens{1},'svm')
