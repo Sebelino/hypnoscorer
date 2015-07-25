@@ -28,6 +28,14 @@ classdef LabeledFeaturevector < Featurevector
                 p(label) = vs;
             end
         end
+        function components = pca(self,numberofcomponents)
+            fs = pca@Featurevector(self,numberofcomponents);
+            labels = [self.Label]';
+            for i = 1:size(fs,1)
+                lfs(i) = LabeledFeaturevector(fs(i).Vector,labels(i));
+            end
+            components = lfs';
+        end
     end
     methods(Access=protected)
         function pg = getPropertyGroups(self)

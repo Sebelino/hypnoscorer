@@ -84,7 +84,7 @@ function stream = score(varargin)
                 stream.trainingset = newset';
             end
         elseif strcmp(tokens{1},'pca')
-            continue
+            stream = stream.pca(2);
         elseif strcmp(tokens{1},'plot')
             figure
             whitebg(1,'k')
