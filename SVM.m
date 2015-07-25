@@ -11,10 +11,10 @@ classdef SVM < Classifier
             self.Model = fitcsvm(predictormatrix,labels);
         end
         function featureset = predict(self,predictors)
-             % Predicts the labels for the given data
-             [labels,score] = predict(self.Model,predictors.matrix());
-             featureset = arrayfun(@(i){LabeledFeaturevector(predictors(i).Vector,labels(i))},(1:size(labels,1)));
-             featureset = [featureset{:}]';
+            % Predicts the labels for the given data
+            [labels,score] = predict(self.Model,predictors.matrix());
+            featureset = arrayfun(@(i){LabeledFeaturevector(predictors(i).Vector,labels(i))},(1:size(labels,1)));
+            featureset = [featureset{:}]';
         end
         function plot(self)
             sv = self.Model.SupportVectors;
