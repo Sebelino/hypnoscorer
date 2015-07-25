@@ -8,7 +8,7 @@ classdef SVM < Classifier
         function self = SVM(labeledfeaturevectors)
             predictormatrix = labeledfeaturevectors.matrix();
             labels = [labeledfeaturevectors.Label]';
-            self.Model = fitcsvm(predictormatrix,labels);
+            self.Model = fitcsvm(predictormatrix,labels,'KernelScale','auto');
         end
         function featureset = predict(self,predictors)
             % Predicts the labels for the given data
