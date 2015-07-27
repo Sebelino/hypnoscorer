@@ -192,10 +192,10 @@ function [eeg,labels] = readsignal(recordpath)
 
         edfpath = strcat(recordpath,'.edf');
         [hea,record] = edfread(edfpath);
-        eegindex = 8;
+        eegindex = find(ismember(hea.label,'EEG'));
         physicaleeg = record(eegindex,:)';
         clear record
-        unit = hea.units(8);
+        unit = hea.units(eegindex);
 
         csvpath = [recordpath,'-staging.csv'];
         csv = csvread(csvpath,1);  % Read everything below row 1 (header)
