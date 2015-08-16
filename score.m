@@ -84,6 +84,11 @@ function stream = score(varargin)
                 end
                 stream.trainingset = newset';
             end
+        elseif strcmp(tokens{1},'organize')
+            if strcmp(tokens{2},'cluster')
+                k = str2num(tokens{3});
+                stream = stream.kmeans(k);
+            end
         elseif strcmp(tokens{1},'pca')
             stream = stream.pca(2);
         elseif strcmp(tokens{1},'plot')

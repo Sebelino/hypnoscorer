@@ -25,15 +25,21 @@ classdef Featurevector < matlab.mixin.CustomDisplay
             end
             featurevector = Featurevector(vector);
         end
+        function featurevectors = extend(self,field,values)
+            featurevectors = self;
+            for i = 1:size(self,1)
+                featurevectors(i).Vector.(field) = values(i);
+            end
+        end
         function components = pca(self, numberofcomponents)
             m = self.matrix();
             normalized = (m-repmat(min(m),size(m,1),1))./repmat(max(m)-min(m),size(m,1),1);
             [coeff score latent] = princomp(normalized);
             components = num2cell(score(:,1:numberofcomponents),2);
             if numberofcomponents == 2
-                components = arrayfun(@(v){Featurevector(struct('PC1', v{1}(1), 'PC2', v{1}(2)))},components);
+                components = arrayfun(@(v){Featurevector(struct('PC1',v{1}(1),'PC2',v{1}(2)))},components);
             elseif numberofcomponents == 3
-                components = arrayfun(@(v){Featurevector(struct('PC1', v{1}(1), 'PC2', v{1}(2), 'PC3', v{1}(3)))},components);
+                components = arrayfun(@(v){Featurevector(struct('PC1',v{1}(1),'PC2',v{1}(2),'PC3',v{1}(3)))},components);
             end
             components = [components{:}]';
         end
@@ -41,6 +47,12 @@ classdef Featurevector < matlab.mixin.CustomDisplay
             % The set of features in the form of a NxM matrix, where N is the number of vectors and M
             % is the number of features
             matrix = cell2mat(struct2cell([self.Vector]')');
+        end
+        function featurevectors = kmeans(self,k)
+            m = self.matrix();
+            [idx,C] = kmeans(m,k,'Distance','cityblock','Replicates',5);
+            featurevectors = self.extend('Cluster',idx);
+            %partition = arrayfun(@(i){self(find(idx == i))},1:k);
         end
     end
     methods(Access=protected)
