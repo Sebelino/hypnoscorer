@@ -1,11 +1,61 @@
 function stream = score(varargin)
-    % cmd A string describing what to do in UNIXy pipeline notation
-    % Examples:
-    % load slp | segment 3 | extract | select Mean Variance | plot
-    % load shh | segment 1 | extract | select Mean Variance | bundle 12RW 34M | keep 0.1
-    %          | partition 0.5 | balance | svm | eval | plot
+    % Enter a string that specifies what you want to do by using UNIXy pipeline notation.
+    % Usage:
+    % >> score('load RECORD | FILTER ARG ... ARG | ... | FILTER ARG ... ARG')
+    % or
+    % >> score(STREAM, 'FILTER ARG ... ARG | ... | FILTER ARG ... ARG')
+    %
+    % Example 1:
+    % >> score('load shh | segment 3 | extract | select Mean Variance | bundle 12RW 34M | partition 0.25 | svm | eval | plot')
+    % Or, alternatively:
+    % >> vectors = score('load shh | segment 3 | extract | select Mean Variance')
+    % >> score(vectors,'bundle 12RW 34M | partition 0.25 | svm | eval | plot')
+    % This does the following:
+    % 1. The signal and labels of the SHHS record are read from the record file.
+    % 2. The signal is segmented into 3 segments per epoch (i.e. 10 second segments).
+    % 3. A feature vector is extracted from each segment.
+    % 4. All features in the feature vector except Mean and Variance are stripped away.
+    % 5. Labels 1, 2, R and W are bundled into label A; labels 3, 4, M are bundled into B.
+    % 6. Randomly selects 25 % of the vectors as training vectors; the rest become test vectors.
+    % 7. Constructs an SVM classifier from the training set.
+    % 8. Evaluates the accuracy of the SVM classifier.
+    % 9. Plots the mismatch between the test set and predicted set.
+    %
+    % Filters:
+    % load RECORD
+    %     Loads the signal and annotations from the record RECORD. Entering only a substring of the
+    %     name of the record as RECORD is fine, as long as there is no ambiguity (e.g. "shhs" as a
+    %     shorthand for "shhs1-200001").
+    % segment COUNT
+    %     Divides a signal into COUNT segments per annotation.
+    % extract
+    %     Extracts a vector of features from each segment.
+    % select FEATURE ... FEATURE
+    %     Strips away all features in the feature vector except those specified.
+    % keep RATIO
+    %     Randomly discards 1-RATIO of the feature vectors.
+    % balance
+    %     Makes the number of vectors belonging to a label constant.
+    % pca
+    %     Constructs a new, two-dimensional feature space from the feature space, in which the first
+    %     and second components of each vector are the first and second principal components.
+    % bundle LABELS ... LABELS
+    %     Bundles every label (character) in the first LABELS into the new label A, every label in
+    %     the second LABELS into B, and so on.
+    % partition RATIO
+    %     Randomly partitions RATIO of the feature space into a training set and the rest into a test set.
+    % svm
+    %     Constructs an SVM classifier from the training set.
+    % eval
+    %     Evaluates the accuracy of the classifier.
+    % organize cluster K
+    %     Performs (unsupervised) hard k-means clustering on the feature space. Extends the feature
+    %     space with another feature which is an integer in [1,K] and signifies the cluster of the
+    %     vector.
+    % plot
+    %     Plots the stream in a way that depends on what it consists of.
     if nargin == 0
-        error('Expected at least one argument.')
+        error('Expected at least one argument. Type "help score" for usage.')
     elseif nargin == 1
         cmd = varargin{1};
     elseif nargin == 2
@@ -54,13 +104,11 @@ function stream = score(varargin)
                 newlabel = char(newlabel+1);
             end
         elseif strcmp(tokens{1},'keep')
-            % Keep a certain random share of the stream and discard the rest
             ratio = str2num(tokens{2});
             indices = randperm(size(stream,1),ratio*size(stream,1));
             stream = stream(indices);
         elseif strcmp(tokens{1},'balance')
             if isa(stream,'LabeledFeaturevector')
-                % Make the number of vectors belonging to a label constant
                 partition = stream.partition();
                 cardinality = min(cellfun(@(p)(size(p,2)),partition.values));
                 newstream = [];
@@ -72,7 +120,6 @@ function stream = score(varargin)
                 end
                 stream = newstream';
             elseif isfield(stream,'trainingset')
-                % Make the number of training vectors belonging to a label constant
                 partition = stream.trainingset.partition();
                 cardinality = min(cellfun(@(p)(size(p,2)),partition.values));
                 newset = [];
