@@ -9,21 +9,26 @@ classdef Featurevector < matlab.mixin.CustomDisplay
         function self = Featurevector(featureStruct)
             self.Vector = featureStruct;
         end
+        function fs = features(self)
+            % List of features
+            fs = fieldnames([self.Vector]);
+        end
         function count = dimension(self)
             % The number of features
-            count = numel(fieldnames(self));
+            count = numel(self.features);
         end
-        function featurevector = select(self,varargin)
+        function featurevectors = select(self,varargin)
             % Reduce the dimension, selecting only the most relevant features
-            vector = self.Vector;
             filteredfields = varargin;
             if length(filteredfields) == 0
                 filteredfields = fieldnames(self.Vector);
             end
-            for f = setdiff(fieldnames(self.Vector),filteredfields)
-                vector = rmfield(vector,f);
+            vectors = [self.Vector]';
+            for f = setdiff(fieldnames([self.Vector]),filteredfields)
+                vectors = rmfield(vectors,f);
             end
-            featurevector = Featurevector(vector);
+            featurevectors = arrayfun(@(v){Featurevector(v)},vectors);
+            featurevectors = [featurevectors{:}]';
         end
         function featurevectors = extend(self,field,values)
             featurevectors = self;

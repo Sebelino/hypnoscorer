@@ -9,9 +9,10 @@ classdef LabeledFeaturevector < Featurevector
             self@Featurevector(featureStruct);
             self.Label = label;
         end
-        function labeledfeaturevector = select(self,varargin)
-            fv = select@Featurevector(self,varargin{:});
-            labeledfeaturevector = LabeledFeaturevector(fv.Vector,self.Label);
+        function labeledfeaturevectors = select(self,varargin)
+            fvs = select@Featurevector(self,varargin{:});
+            labeledfeaturevectors = arrayfun(@(i){LabeledFeaturevector([fvs(i).Vector]',[self(i).Label]')},1:size(self,1));
+            labeledfeaturevectors = [labeledfeaturevectors{:}]';
         end
         function tbl = table(self)
             % Displays the feature vectors + labels as strings in a table.

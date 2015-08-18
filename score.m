@@ -39,6 +39,10 @@ function stream = score(varargin)
     %     Input: Nx1 Featurevector.
     %     Strips away all features in the feature vector except those specified.
     %     Output: Nx1 Featurevector.
+    % select exhaustive CLASSIFIER
+    %     Input: Nx1 Featurevector.
+    %     Applies classifier CLASSIFIER to the input partition for every combination of features.
+    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, ratio.
     % keep RATIO
     %     Input: Nx1 Featurevector.
     %     Randomly discards 1-RATIO of the feature vectors.
@@ -110,10 +114,26 @@ function stream = score(varargin)
             fs = [fs{:}]';
             stream = fs;
         elseif strcmp(tokens{1},'select')
-            features = tokens(2:end);
-            sfs = arrayfun(@(f){f.select(features{:})},stream);
-            sfs = [sfs{:}]';
-            stream = sfs;
+            if size(tokens,2) == 3 && strcmp(tokens{2},'exhaustive')
+                classifier = tokens{3};
+                allfeatures = stream.trainingset.features;
+                selections = [];
+                for i = 1:numel(allfeatures)
+                    selections = [selections;num2cell(nchoosek(allfeatures,i),2)];
+                end
+                partitions = [];
+                for selection = selections'
+                    sel = selection{:};
+                    trainingset = stream.trainingset.select(sel{:});
+                    testset = stream.testset.select(sel{:});
+                    partition = struct('trainingset',trainingset,'testset',testset);
+                    partitions = [partitions;score(partition,[classifier,' | eval'])];
+                end
+                stream = partitions;
+            else
+                features = tokens(2:end);
+                stream = stream.select(features{:});
+            end
         elseif strcmp(tokens{1},'partition')
             parts = strsplit(tokens{2},':');
             if size(parts,2) == 2
