@@ -90,8 +90,15 @@ function stream = score(varargin)
             sfs = [sfs{:}]';
             stream = sfs;
         elseif strcmp(tokens{1},'partition')
-            ratio = str2num(tokens{2});
-            trainingindices = randperm(size(stream,1),ratio*size(stream,1))';
+            parts = strsplit(tokens{2},':');
+            if size(parts,2) == 2
+                numerator = str2num(parts{1});
+                denominator = str2num(parts{2});
+            else
+                numerator = str2num(tokens{2});
+                denominator = 1;
+            end
+            trainingindices = randperm(size(stream,1),numerator/denominator*size(stream,1))';
             testindices = setdiff(1:size(stream,1),trainingindices)';
             trainedfs = stream(trainingindices);
             testedfs = stream(testindices);
@@ -106,8 +113,15 @@ function stream = score(varargin)
                 newlabel = char(newlabel+1);
             end
         elseif strcmp(tokens{1},'keep')
-            ratio = str2num(tokens{2});
-            indices = randperm(size(stream,1),ratio*size(stream,1));
+            parts = strsplit(tokens{2},':');
+            if size(parts,2) == 2
+                numerator = str2num(parts{1});
+                denominator = str2num(parts{2});
+            else
+                numerator = str2num(tokens{2});
+                denominator = 1;
+            end
+            indices = randperm(size(stream,1),numerator/denominator*size(stream,1));
             stream = stream(indices);
         elseif strcmp(tokens{1},'balance')
             if isa(stream,'LabeledFeaturevector')
