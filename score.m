@@ -26,35 +26,60 @@ function stream = score(varargin)
     %     Loads the signal and annotations from the record RECORD. Entering only a substring of the
     %     name of the record as RECORD is fine, as long as there is no ambiguity (e.g. "shhs" as a
     %     shorthand for "shhs1-200001").
+    %     Output: 1x1 Signal.
     % segment COUNT
+    %     Input: Signal instance.
     %     Divides a signal into COUNT segments per annotation.
+    %     Output: Nx1 Segment.
     % extract
+    %     Input: Nx1 Segment.
     %     Extracts a vector of features from each segment.
+    %     Output: Nx1 Featurevector.
     % select FEATURE ... FEATURE
+    %     Input: Nx1 Featurevector.
     %     Strips away all features in the feature vector except those specified.
+    %     Output: Nx1 Featurevector.
     % keep RATIO
+    %     Input: Nx1 Featurevector.
     %     Randomly discards 1-RATIO of the feature vectors.
+    %     Output: Mx1 Featurevector.
     % balance
+    %     Input: Nx1 Featurevector.
     %     Makes the number of vectors belonging to a label constant.
+    %     Output: Mx1 Featurevector.
     % pca
+    %     Input: Nx1 Featurevector.
     %     Constructs a new, two-dimensional feature space from the feature space, in which the first
     %     and second components of each vector are the first and second principal components.
+    %     Output: Nx1 Featurevector.
     % bundle LABELS ... LABELS
+    %     Input: Nx1 LabeledFeaturevector.
     %     Bundles every label (character) in the first LABELS into the new label A, every label in
     %     the second LABELS into B, and so on.
+    %     Output: Nx1 LabeledFeaturevector.
     % partition RATIO
+    %     Input: Nx1 LabeledFeaturevector.
     %     Randomly partitions RATIO of the feature space into a training set and the rest into a test set.
+    %     Output: 1x1 struct with fields trainingset, testset.
     % svm
+    %     Input: 1x1 struct with fields trainingset, testset.
     %     Constructs an SVM classifier from the training set.
+    %     Output: 1x1 struct with fields trainingset, testset, svm.
     % eval
+    %     Input: 1x1 struct with fields trainingset, testset, svm.
     %     Evaluates the accuracy of the classifier.
+    %     Output: 1x1 struct with fields trainingset, testset, svm, predictedset, ratio.
     % organize cluster K
+    %     Input: Nx1 Featurevector.
     %     Performs (unsupervised) hard k-means clustering on the feature space. Extends the feature
     %     space with another feature which is an integer in [1,K] and signifies the cluster of the
     %     vector.
+    %     Output: Nx1 Featurevector.
     % plot
+    %     Input: Nx1 LabeledFeaturevector, or partition, or evaluation.
     %     Plots the stream in a way that depends on what it consists of.
     % plot clusters
+    %     Input: Nx1 LabeledFeaturevector in which Cluster is a feature.
     %     If the stream is a clustered feature space, this plots the clusters.
     if nargin == 0
         error('Expected at least one argument. Type "help score" for usage.')
