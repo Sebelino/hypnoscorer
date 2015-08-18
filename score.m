@@ -171,10 +171,11 @@ function stream = score(varargin)
                     if strcmp(tokens{2},'clusters')
                         clusterindex = find(strcmp(features,'Cluster'));
                         m = stream.matrix;
-                        styles = {[0.2 0 0],[0 0.2 0],[0 0 0.2],[0.1 0 0.1]};
                         for i = 1:max(m(:,clusterindex))
                             indices = find(m(:,clusterindex)==i);
-                            plot(stream(indices),{styles{i},'.',80,'off'})
+                            style = [rand,rand,rand];
+                            style = style/sum(style)/5;
+                            plot(stream(indices),{style,'.',80,'off'})
                         end
                     end
                 end
