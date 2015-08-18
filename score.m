@@ -242,14 +242,19 @@ function stream = score(varargin)
                     plot(pfs,{'y','o','','off'})
                 end
             end
-            return
         elseif strcmp(tokens{1},'svm')
             stream.svm = SVM(stream.trainingset);
         elseif strcmp(tokens{1},'eval')
-            stream.predictedset = stream.svm.predict(stream.testset);
-            diff = [stream.predictedset.Label]'-[stream.testset.Label]';
-            diff(diff~=0) = 1;
-            stream.ratio = 1-sum(diff)/size(diff,1);
+            if numel(stream) > 1
+                [~,indices] = sort([stream.ratio]);
+                stream = flip(stream(indices));
+                stream = stream(1);  % Comment this if you want all evaluations in sorted order
+            else
+                stream.predictedset = stream.svm.predict(stream.testset);
+                diff = [stream.predictedset.Label]'-[stream.testset.Label]';
+                diff(diff~=0) = 1;
+                stream.ratio = 1-sum(diff)/size(diff,1);
+            end
         else
             error(['Could not interpret command "',tokens{1},'".'])
         end
