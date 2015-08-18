@@ -74,11 +74,11 @@ function stream = score(varargin)
     %     Evaluates the accuracy of the classifier.
     %     Output: 1x1 struct with fields trainingset, testset, svm, predictedset, ratio.
     % organize cluster K
-    %     Input: Nx1 Featurevector.
+    %     Input: Nx1 Featurevector, or a partition.
     %     Performs (unsupervised) hard k-means clustering on the feature space. Extends the feature
     %     space with another feature which is an integer in [1,K] and signifies the cluster of the
     %     vector.
-    %     Output: Nx1 Featurevector.
+    %     Output: Nx1 Featurevector, or a partition.
     % plot
     %     Input: Nx1 LabeledFeaturevector, or partition, or evaluation.
     %     Plots the stream in a way that depends on what it consists of.
@@ -195,7 +195,14 @@ function stream = score(varargin)
         elseif strcmp(tokens{1},'organize')
             if strcmp(tokens{2},'cluster')
                 k = str2num(tokens{3});
-                stream = stream.kmeans(k);
+                if isa(stream,'LabeledFeaturevector')
+                    stream = stream.kmeans(k);
+                elseif isfield(stream,'trainingset')
+                    newstream = struct();
+                    newstream.trainingset = score(stream.trainingset,filter{:});
+                    newstream.testset = score(stream.testset,filter{:});
+                    stream = newstream;
+                end
             end
         elseif strcmp(tokens{1},'pca')
             stream = stream.pca(2);
