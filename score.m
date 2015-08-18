@@ -54,6 +54,8 @@ function stream = score(varargin)
     %     vector.
     % plot
     %     Plots the stream in a way that depends on what it consists of.
+    % plot clusters
+    %     If the stream is a clustered feature space, this plots the clusters.
     if nargin == 0
         error('Expected at least one argument. Type "help score" for usage.')
     elseif nargin == 1
@@ -151,6 +153,17 @@ function stream = score(varargin)
                 xaxis = [vs.(features{1})]';
                 yaxis = [vs.(features{2})]';
                 labels = [stream.Label]';
+                if size(tokens,2) == 2
+                    if strcmp(tokens{2},'clusters')
+                        clusterindex = find(strcmp(features,'Cluster'));
+                        m = stream.matrix;
+                        styles = {[0.2 0 0],[0 0.2 0],[0 0 0.2],[0.1 0 0.1]};
+                        for i = 1:max(m(:,clusterindex))
+                            indices = find(m(:,clusterindex)==i);
+                            plot(stream(indices),{styles{i},'.',80,'off'})
+                        end
+                    end
+                end
                 gscatter(xaxis,yaxis,labels)
                 xlabel(features{1})
                 ylabel(features{2})
