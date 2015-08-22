@@ -258,7 +258,7 @@ function [numerator,denominator] = str2fraction(fracstr)
     parts = strsplit(fracstr,':');
     if size(parts,2) == 2
         numerator = str2num(parts{1});
-        denominator = str2num(parts{2})+1;
+        denominator = numerator+str2num(parts{2});
     else
         numerator = str2num(tokens{2});
         denominator = 1;
