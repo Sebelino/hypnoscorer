@@ -196,12 +196,21 @@ function stream = score(varargin)
             figure
             whitebg(1,'k')
             hold on
+            if strcmp(tokens{2},'hypnogram')
+                labels = [stream.Label];
+                labelset = unique(labels);
+                ylim([0,numel(labelset)+1])
+                set(gca,'yTick',0:numel(labelset)+1)
+                set(gca,'yTickLabel',[{' '},num2cell(labelset),{' '}])
+                numericlabels = arrayfun(@(x)(find(x==labelset)),labels);
+                stairs(numericlabels)
+            end
             if numel(stream) > 1 && isfield(stream,'ratio')
                 bar([stream.ratio]')
             elseif isfield(stream,'svm')
                 stream.svm.plot()
             end
-            if isa(stream,'LabeledFeaturevector')
+            if numel(tokens) == 1 && isa(stream,'LabeledFeaturevector')
                 vs = [stream.Vector]';
                 features = fieldnames(vs);
                 xaxis = [vs.(features{1})]';
