@@ -85,6 +85,9 @@ function stream = score(varargin)
     % plot clusters
     %     Input: Nx1 LabeledFeaturevector in which Cluster is a feature.
     %     If the stream is a clustered feature space, this plots the clusters.
+    % plot hypnogram
+    %     Input: Nx1 LabeledFeaturevector, or a struct with testset and predictedset fields.
+    %     Plots the hypnogram or the two hypnograms.
     if nargin == 0
         error('Expected at least one argument. Type "help score" for usage.')
     elseif nargin == 1
@@ -197,20 +200,19 @@ function stream = score(varargin)
             whitebg(1,'k')
             hold on
             if strcmp(tokens{2},'hypnogram')
-                labels = [stream.Label];
-                labelset = unique(labels);
-                ylim([0,numel(labelset)+1])
-                set(gca,'yTick',0:numel(labelset)+1)
-                set(gca,'yTickLabel',[{' '},num2cell(labelset),{' '}])
-                numericlabels = arrayfun(@(x)(find(x==labelset)),labels);
-                stairs(numericlabels)
+                if isa(stream,'LabeledFeaturevector')
+                    plothypnogram(stream)
+                elseif isfield(stream,'testset') && isfield(stream,'predictedset')
+                    plothypnogram(stream.testset)
+                    plothypnogram(stream.predictedset)
+                end
             end
             if numel(stream) > 1 && isfield(stream,'ratio')
                 bar([stream.ratio]')
             elseif isfield(stream,'svm')
                 stream.svm.plot()
             end
-            if numel(tokens) == 1 && isa(stream,'LabeledFeaturevector')
+            if ~strcmp(tokens{2},'hypnogram') && isa(stream,'LabeledFeaturevector')
                 vs = [stream.Vector]';
                 features = fieldnames(vs);
                 xaxis = [vs.(features{1})]';
@@ -272,6 +274,16 @@ function [numerator,denominator] = str2fraction(fracstr)
         numerator = str2num(tokens{2});
         denominator = 1;
     end
+end
+
+function plothypnogram(labeledfeatureset)
+    labels = [labeledfeatureset.Label];
+    labelset = unique(labels);
+    ylim([0,numel(labelset)+1])
+    set(gca,'yTick',0:numel(labelset)+1)
+    set(gca,'yTickLabel',[{' '},num2cell(labelset),{' '}])
+    numericlabels = arrayfun(@(x)(find(x==labelset)),labels);
+    stairs(numericlabels,'Color',[rand,rand,rand])
 end
 
 function plot(labeledfeatureset,style)
