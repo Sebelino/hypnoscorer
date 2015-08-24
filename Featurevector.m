@@ -57,7 +57,6 @@ classdef Featurevector < matlab.mixin.CustomDisplay
             m = self.matrix();
             [idx,C] = kmeans(m,k,'Distance','cityblock','Replicates',5);
             featurevectors = self.extend('Cluster',idx);
-            %partition = arrayfun(@(i){self(find(idx == i))},1:k);
         end
     end
     methods(Access=protected)
