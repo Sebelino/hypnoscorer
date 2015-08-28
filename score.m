@@ -197,7 +197,7 @@ function stream = score(varargin)
             stream = stream.pca(2);
         elseif strcmp(tokens{1},'plot')
             figure
-            whitebg(1,'k')
+            whitebg(1,'w')
             hold on
             if strcmp(tokens{2},'hypnogram')
                 if isa(stream,'LabeledFeaturevector')
@@ -225,7 +225,7 @@ function stream = score(varargin)
                         for i = 1:max(m(:,clusterindex))
                             indices = find(m(:,clusterindex)==i);
                             style = [rand,rand,rand];
-                            style = style/sum(style)/5;
+                            style = [1 1 1] - style/sum(style)/5;
                             plot(stream(indices),{style,'.',80,'off'})
                         end
                     end
@@ -243,7 +243,7 @@ function stream = score(varargin)
                     diff = [pfs.Label]'-[stream.testset.Label]';
                     indices = find(diff);
                     pfs = pfs(indices);
-                    plot(pfs,{'y','o','','off'})
+                    plot(pfs,{[0.25 0 0.5],'o',8,'off'})
                 end
             end
         elseif strcmp(tokens{1},'svm')

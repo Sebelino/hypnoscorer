@@ -19,7 +19,7 @@ classdef SVM < Classifier
         function plot(self)
             sv = self.Model.SupportVectors;
             % Plot vectors
-            plot(sv(:,1),sv(:,2),'s','MarkerEdgeColor',[1.0 1.0 1.0],'MarkerSize',9,'LineWidth',1)
+            plot(sv(:,1),sv(:,2),'s','MarkerEdgeColor',[0.1 0.1 0.1],'MarkerSize',9,'LineWidth',1)
         end
     end
 end
