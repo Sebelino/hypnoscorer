@@ -199,7 +199,7 @@ function stream = score(varargin)
             figure
             whitebg(1,'w')
             hold on
-            if strcmp(tokens{2},'hypnogram')
+            if numel(tokens) >= 2 && strcmp(tokens{2},'hypnogram')
                 if isa(stream,'LabeledFeaturevector')
                     plothypnogram(stream)
                 elseif isfield(stream,'testset') && isfield(stream,'predictedset')
@@ -212,7 +212,7 @@ function stream = score(varargin)
             elseif isfield(stream,'svm')
                 stream.svm.plot()
             end
-            if ~strcmp(tokens{2},'hypnogram') && isa(stream,'LabeledFeaturevector')
+            if (numel(tokens) == 1 || ~strcmp(tokens{2},'hypnogram')) && isa(stream,'LabeledFeaturevector')
                 vs = [stream.Vector]';
                 features = fieldnames(vs);
                 xaxis = [vs.(features{1})]';
