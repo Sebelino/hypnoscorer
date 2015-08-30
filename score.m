@@ -230,9 +230,7 @@ function stream = score(varargin)
                         end
                     end
                 end
-                gscatter(xaxis,yaxis,labels)
-                xlabel(features{1})
-                ylabel(features{2})
+                plot(stream,{})
             elseif numel(stream) == 1 && isfield(stream,'trainingset') && isfield(stream,'testset')
                 plot(stream.trainingset,{'','*','','off'})
                 plot(stream.testset,{'','.','','off'})
