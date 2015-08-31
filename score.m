@@ -40,7 +40,7 @@ function stream = score(varargin)
     %     Strips away all features in the feature vector except those specified.
     %     Output: Nx1 Featurevector.
     % select exhaustive CLASSIFIER
-    %     Input: Nx1 Featurevector.
+    %     Input: Partition.
     %     Applies classifier CLASSIFIER to the input partition for every combination of features.
     %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, ratio.
     % keep RATIO
