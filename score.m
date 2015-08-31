@@ -130,6 +130,7 @@ function stream = score(varargin)
                     trainingset = stream.trainingset.select(sel{:});
                     testset = stream.testset.select(sel{:});
                     partition = struct('trainingset',trainingset,'testset',testset);
+                    disp(['Evaling ',strjoin(sel),' / ',num2str(numel(selections))])
                     partitions = [partitions;score(partition,[classifier,' | eval'])];
                 end
                 stream = partitions;
@@ -273,10 +274,13 @@ end
 
 function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
     generation = round(rand(N,dimensions));
+    disp(['Computing generation 1/',num2str(runs),'...'])
     evaluations = fitness(generation,decoder);
     [~,argmax] = max([evaluations.ratio]);
 
     for t = 2:runs
+        [generation,[evaluations.ratio]']
+        disp(['Computing generation ',num2str(t),'/',num2str(runs),'...'])
         offspring = zeros(N,dimensions)-1;
         for row = 1:N
             % Selection
@@ -291,6 +295,7 @@ function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
             % Crossing
             crossindex = ceil(rand*dimensions);
             offspring(row,:) = [generation(index1,1:crossindex-1),generation(index2,crossindex:dimensions)];
+            disp(['Cross rows ',num2str(index1),' and ',num2str(index2),' at ',num2str(crossindex)])
             % Mutation
             mutation = rand(1,dimensions) < mutationrate;
             offspring(row,:) = xor(offspring(row,:),mutation);
@@ -306,6 +311,7 @@ function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
         generation = allindividuals(sortindices(1:N),:);
         evaluations = allevaluations(sortindices(1:N),:);
     end
+    [generation,[evaluations.ratio]']
     [~,argmax] = max([evaluations.ratio]);
     fittest = generation(argmax,:);
     evaluation = evaluations(argmax,:);
