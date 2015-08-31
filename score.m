@@ -42,12 +42,12 @@ function stream = score(varargin)
     % select exhaustive CLASSIFIER
     %     Input: Partition.
     %     Applies classifier CLASSIFIER to the input partition for every combination of features.
-    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, ratio.
+    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, accuracy.
     % select restricted CLASSIFIER
     %     Input: Partition.
     %     Uses restricted search with GA and classifier CLASSIFIER to find the best combinations of
     %     features for the input partition.
-    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, ratio.
+    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, accuracy.
     % keep RATIO
     %     Input: Nx1 Featurevector.
     %     Randomly discards 1-RATIO of the feature vectors.
@@ -77,7 +77,7 @@ function stream = score(varargin)
     % eval
     %     Input: 1x1 struct with fields trainingset, testset, svm.
     %     Evaluates the accuracy of the classifier.
-    %     Output: 1x1 struct with fields trainingset, testset, svm, predictedset, ratio.
+    %     Output: 1x1 struct with fields trainingset, testset, svm, predictedset, accuracy.
     % organize cluster K
     %     Input: Nx1 Featurevector, or a partition.
     %     Performs (unsupervised) hard k-means clustering on the feature space. Extends the feature
@@ -216,8 +216,8 @@ function stream = score(varargin)
                     plothypnogram(stream.predictedset)
                 end
             end
-            if numel(stream) > 1 && isfield(stream,'ratio')
-                bar([stream.ratio]')
+            if numel(stream) > 1 && isfield(stream,'accuracy')
+                bar([stream.accuracy]')
             elseif isfield(stream,'svm')
                 stream.svm.plot()
             end
@@ -257,14 +257,14 @@ function stream = score(varargin)
             stream.svm = SVM(stream.trainingset);
         elseif strcmp(tokens{1},'eval')
             if numel(stream) > 1
-                [~,indices] = sort([stream.ratio]);
+                [~,indices] = sort([stream.accuracy]);
                 stream = flip(stream(indices));
                 stream = stream(1);  % Comment this if you want all evaluations in sorted order
             else
                 stream.predictedset = stream.svm.predict(stream.testset);
                 diff = [stream.predictedset.Label]'-[stream.testset.Label]';
                 diff(diff~=0) = 1;
-                stream.ratio = 1-sum(diff)/size(diff,1);
+                stream.accuracy = 1-sum(diff)/size(diff,1);
             end
         else
             error(['Could not interpret command "',tokens{1},'".'])
@@ -281,20 +281,20 @@ function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
     generation = round(rand(N,dimensions));
     disp(['Computing generation 1/',num2str(runs),'...'])
     evaluations = fitness(generation,decoder);
-    [~,argmax] = max([evaluations.ratio]);
+    [~,argmax] = max([evaluations.accuracy]);
 
     for t = 2:runs
-        [generation,[evaluations.ratio]']
+        [generation,[evaluations.accuracy]']
         disp(['Computing generation ',num2str(t),'/',num2str(runs),'...'])
         offspring = zeros(N,dimensions)-1;
         for row = 1:N
             % Selection
-            y = cumsum([evaluations.ratio]');
-            x1 = rand*sum([evaluations.ratio]');
+            y = cumsum([evaluations.accuracy]');
+            x1 = rand*sum([evaluations.accuracy]');
             index1 = find(x1 < y,1);
             index2 = index1;
             while index2 == index1
-                x2 = rand*sum([evaluations.ratio]');
+                x2 = rand*sum([evaluations.accuracy]');
                 index2 = find(x2 < y,1);
             end
             % Crossing
@@ -310,14 +310,14 @@ function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
         % Elitism
         allevaluations = [evaluations;offspringevaluations];
         allindividuals = [generation;offspring];
-        [sorted,sortindices] = sort([allevaluations.ratio]');
+        [sorted,sortindices] = sort([allevaluations.accuracy]');
         sorted = flip(sorted);
         sortindices = flip(sortindices);
         generation = allindividuals(sortindices(1:N),:);
         evaluations = allevaluations(sortindices(1:N),:);
     end
-    [generation,[evaluations.ratio]']
-    [~,argmax] = max([evaluations.ratio]);
+    [generation,[evaluations.accuracy]']
+    [~,argmax] = max([evaluations.accuracy]);
     fittest = generation(argmax,:);
     evaluation = evaluations(argmax,:);
 end
