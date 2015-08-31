@@ -43,6 +43,11 @@ function stream = score(varargin)
     %     Input: Partition.
     %     Applies classifier CLASSIFIER to the input partition for every combination of features.
     %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, ratio.
+    % select restricted CLASSIFIER
+    %     Input: Partition.
+    %     Uses restricted search with GA and classifier CLASSIFIER to find the best combinations of
+    %     features for the input partition.
+    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, ratio.
     % keep RATIO
     %     Input: Nx1 Featurevector.
     %     Randomly discards 1-RATIO of the feature vectors.
