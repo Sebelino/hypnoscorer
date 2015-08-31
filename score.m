@@ -133,6 +133,9 @@ function stream = score(varargin)
                     partitions = [partitions;score(partition,[classifier,' | eval'])];
                 end
                 stream = partitions;
+            elseif size(tokens,2) == 3 && strcmp(tokens{2},'restricted')
+                classifier = tokens{3};
+                stream = restrictedsearch(stream,classifier);
             else
                 features = tokens(2:end);
                 stream = stream.select(features{:});
@@ -259,6 +262,70 @@ function stream = score(varargin)
             end
         else
             error(['Could not interpret command "',tokens{1},'".'])
+        end
+    end
+end
+
+function stream = restrictedsearch(partition,classifier)
+    decoder = {partition,classifier};
+    [~,stream] = my_ga(partition.trainingset.dimension,5,0.2,3,decoder);
+end
+
+function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
+    generation = round(rand(N,dimensions));
+    evaluations = fitness(generation,decoder);
+    [~,argmax] = max([evaluations.ratio]);
+
+    for t = 2:runs
+        offspring = zeros(N,dimensions)-1;
+        for row = 1:N
+            % Selection
+            y = cumsum([evaluations.ratio]');
+            x1 = rand*sum([evaluations.ratio]');
+            index1 = find(x1 < y,1);
+            index2 = index1;
+            while index2 == index1
+                x2 = rand*sum([evaluations.ratio]');
+                index2 = find(x2 < y,1);
+            end
+            % Crossing
+            crossindex = ceil(rand*dimensions);
+            offspring(row,:) = [generation(index1,1:crossindex-1),generation(index2,crossindex:dimensions)];
+            % Mutation
+            mutation = rand(1,dimensions) < mutationrate;
+            offspring(row,:) = xor(offspring(row,:),mutation);
+            % Update fitnesses
+            offspringevaluations(row,:) = fitness(offspring(row,:),decoder);
+        end
+        % Elitism
+        allevaluations = [evaluations;offspringevaluations];
+        allindividuals = [generation;offspring];
+        [sorted,sortindices] = sort([allevaluations.ratio]');
+        sorted = flip(sorted);
+        sortindices = flip(sortindices);
+        generation = allindividuals(sortindices(1:N),:);
+        evaluations = allevaluations(sortindices(1:N),:);
+    end
+    [~,argmax] = max([evaluations.ratio]);
+    fittest = generation(argmax,:);
+    evaluation = evaluations(argmax,:);
+end
+
+function evaluations = fitness(encodings,decoder)
+    evaluations = [];
+    for row = 1:size(encodings,1)
+        encoding = encodings(row,:);
+        if sum(encoding) == 0  % Cannot select zero features
+            evaluations = [evaluations;struct()];
+        else
+            partition = decoder{1};
+            classifier = decoder{2};
+            allfeatures = partition.trainingset.features;
+            selectedfs = allfeatures(find(encoding));
+            trainingset = partition.trainingset.select(selectedfs{:});
+            testset = partition.testset.select(selectedfs{:});
+            newpartition = struct('trainingset',trainingset,'testset',testset);
+            evaluations = [evaluations;score(newpartition,[classifier,' | eval'])];
         end
     end
 end
