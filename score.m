@@ -262,9 +262,14 @@ function stream = score(varargin)
                 stream = stream(1);  % Comment this if you want all evaluations in sorted order
             else
                 stream.predictedset = stream.svm.predict(stream.testset);
-                diff = [stream.predictedset.Label]'-[stream.testset.Label]';
-                diff(diff~=0) = 1;
-                stream.accuracy = 1-sum(diff)/size(diff,1);
+                labels = num2cell([[stream.predictedset.Label]',[stream.testset.Label]'],2);
+                tp = sum(arrayfun(@(l)strcmp(l,'AA'),labels));  % Assumes that W is bundled before 123R
+                tn = sum(arrayfun(@(l)strcmp(l,'BB'),labels));
+                fp = sum(arrayfun(@(l)strcmp(l,'BA'),labels));
+                fn = sum(arrayfun(@(l)strcmp(l,'AB'),labels));
+                stream.accuracy = (tp+tn)/(tp+tn+fp+fn);
+                stream.sensitivity = tp/(tp+fn);
+                stream.specificity = tn/(tn+fp);
             end
         else
             error(['Could not interpret command "',tokens{1},'".'])
