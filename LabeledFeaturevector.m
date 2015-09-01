@@ -2,7 +2,7 @@ classdef LabeledFeaturevector < Featurevector
     % LabeledFeaturevector A vector of features paired with a label.
 
     properties
-        Label  % E.g. '3' for N3.
+        Label  % Single label character. E.g. '3' for N3.
     end
     methods
         function self = LabeledFeaturevector(featureStruct,label)
