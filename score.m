@@ -42,12 +42,12 @@ function stream = score(varargin)
     % select exhaustive CLASSIFIER
     %     Input: Partition.
     %     Applies classifier CLASSIFIER to the input partition for every combination of features.
-    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, accuracy.
+    %     Output: Mx1 struct array with fields trainingset, testingset, svm, predictedset, accuracy.
     % select restricted CLASSIFIER
     %     Input: Partition.
     %     Uses restricted search with GA and classifier CLASSIFIER to find the best combinations of
     %     features for the input partition.
-    %     Output: Mx1 struct array with fields trainingset, testset, svm, predictedset, accuracy.
+    %     Output: Mx1 struct array with fields trainingset, testingset, svm, predictedset, accuracy.
     % keep RATIO
     %     Input: Nx1 Featurevector.
     %     Randomly discards 1-RATIO of the feature vectors.
@@ -69,15 +69,15 @@ function stream = score(varargin)
     % partition RATIO
     %     Input: Nx1 LabeledFeaturevector.
     %     Randomly partitions RATIO of the feature space into a training set and the rest into a test set.
-    %     Output: 1x1 struct with fields trainingset, testset.
+    %     Output: 1x1 struct with fields trainingset, testingset.
     % svm
-    %     Input: 1x1 struct with fields trainingset, testset.
+    %     Input: 1x1 struct with fields trainingset, testingset.
     %     Constructs an SVM classifier from the training set.
-    %     Output: 1x1 struct with fields trainingset, testset, svm.
+    %     Output: 1x1 struct with fields trainingset, testingset, svm.
     % eval
-    %     Input: 1x1 struct with fields trainingset, testset, svm.
+    %     Input: 1x1 struct with fields trainingset, testingset, svm.
     %     Evaluates the accuracy of the classifier.
-    %     Output: 1x1 struct with fields trainingset, testset, svm, predictedset, accuracy.
+    %     Output: 1x1 struct with fields trainingset, testingset, svm, predictedset, accuracy.
     % organize cluster K
     %     Input: Nx1 Featurevector, or a partition.
     %     Performs (unsupervised) hard k-means clustering on the feature space. Extends the feature
@@ -91,7 +91,7 @@ function stream = score(varargin)
     %     Input: Nx1 LabeledFeaturevector in which Cluster is a feature.
     %     If the stream is a clustered feature space, this plots the clusters.
     % plot hypnogram
-    %     Input: Nx1 LabeledFeaturevector, or a struct with testset and predictedset fields.
+    %     Input: Nx1 LabeledFeaturevector, or a struct with testingset and predictedset fields.
     %     Plots the hypnogram or the two hypnograms.
     if nargin == 0
         error('Expected at least one argument. Type "help score" for usage.')
@@ -129,19 +129,21 @@ function stream = score(varargin)
                 for i = 1:numel(allfeatures)
                     selections = [selections;num2cell(nchoosek(allfeatures,i),2)];
                 end
-                partitions = [];
+                vpartitions = [];
                 for selection = selections'
                     sel = selection{:};
-                    trainingset = stream.trainingset.select(sel{:});
-                    testset = stream.testset.select(sel{:});
-                    partition = struct('trainingset',trainingset,'testset',testset);
+                    vp = score(stream.trainingset,'partition 3:1');  % TODO soft-code
+                    vp.trainingset = vp.trainingset.select(sel{:});
+                    vp.testingset = vp.testingset.select(sel{:});
                     disp(['Evaling ',strjoin(sel),' / ',num2str(numel(selections))])
-                    partitions = [partitions;score(partition,[classifier,' | eval'])];
+                    vpartitions = [vpartitions;score(vp,[classifier,' | eval'])];
                 end
-                stream = partitions;
+                stream.evaluation = vpartitions;
+                stream = rmfield(stream,'trainingset');
             elseif size(tokens,2) == 3 && strcmp(tokens{2},'restricted')
                 classifier = tokens{3};
-                stream = restrictedsearch(stream,classifier);
+                stream.evaluation = restrictedsearch(stream.trainingset,classifier);
+                stream = rmfield(stream,'trainingset');
             else
                 features = tokens(2:end);
                 stream = stream.select(features{:});
@@ -152,7 +154,7 @@ function stream = score(varargin)
             testindices = setdiff(1:size(stream,1),trainingindices)';
             trainedfs = stream(trainingindices);
             testedfs = stream(testindices);
-            stream = struct('trainingset',trainedfs,'testset',testedfs);
+            stream = struct('trainingset',trainedfs,'testingset',testedfs);
         elseif strcmp(tokens{1},'bundle')
             bundles = tokens(2:end);
             newlabel = 'A';
@@ -198,7 +200,7 @@ function stream = score(varargin)
                 elseif isfield(stream,'trainingset')
                     newstream = struct();
                     newstream.trainingset = score(stream.trainingset,filter{:});
-                    newstream.testset = score(stream.testset,filter{:});
+                    newstream.testingset = score(stream.testingset,filter{:});
                     stream = newstream;
                 end
             end
@@ -211,8 +213,8 @@ function stream = score(varargin)
             if numel(tokens) >= 2 && strcmp(tokens{2},'hypnogram')
                 if isa(stream,'LabeledFeaturevector')
                     plothypnogram(stream)
-                elseif isfield(stream,'testset') && isfield(stream,'predictedset')
-                    plothypnogram(stream.testset)
+                elseif isfield(stream,'testingset') && isfield(stream,'predictedset')
+                    plothypnogram(stream.testingset)
                     plothypnogram(stream.predictedset)
                 end
             end
@@ -240,14 +242,14 @@ function stream = score(varargin)
                     end
                 end
                 plot(stream,{})
-            elseif numel(stream) == 1 && isfield(stream,'trainingset') && isfield(stream,'testset')
+            elseif numel(stream) == 1 && isfield(stream,'trainingset') && isfield(stream,'testingset')
                 plot(stream.trainingset,{'','*','','off'})
-                plot(stream.testset,{'','.','','off'})
+                plot(stream.testingingset,{'','.','','off'})
                 if isfield(stream,'predictedset')
                     pfs = stream.predictedset;
                     pfs = arrayfun(@(i){LabeledFeaturevector(pfs(i).Vector,pfs(i).Label)},(1:size(pfs,1)));
                     pfs = [pfs{:}]';
-                    diff = [pfs.Label]'-[stream.testset.Label]';
+                    diff = [pfs.Label]'-[stream.testingset.Label]';
                     indices = find(diff);
                     pfs = pfs(indices);
                     plot(pfs,{[0.25 0 0.5],'o',8,'off'})
@@ -256,13 +258,9 @@ function stream = score(varargin)
         elseif strcmp(tokens{1},'svm')
             stream.svm = SVM(stream.trainingset);
         elseif strcmp(tokens{1},'eval')
-            if numel(stream) > 1
-                [~,indices] = sort([stream.accuracy]);
-                stream = flip(stream(indices));
-                stream = stream(1);  % Comment this if you want all evaluations in sorted order
-            else
-                stream.predictedset = stream.svm.predict(stream.testset);
-                labels = num2cell([[stream.predictedset.Label]',[stream.testset.Label]'],2);
+            if isfield(stream,'svm')
+                stream.predictedset = stream.svm.predict(stream.testingset);
+                labels = num2cell([[stream.predictedset.Label]',[stream.testingset.Label]'],2);
                 tp = sum(arrayfun(@(l)strcmp(l,'AA'),labels));  % Assumes that W is bundled before 123R
                 tn = sum(arrayfun(@(l)strcmp(l,'BB'),labels));
                 fp = sum(arrayfun(@(l)strcmp(l,'BA'),labels));
@@ -270,6 +268,16 @@ function stream = score(varargin)
                 stream.accuracy = (tp+tn)/(tp+tn+fp+fn);
                 stream.sensitivity = tp/(tp+fn);
                 stream.specificity = tn/(tn+fp);
+            else
+                evaluation = stream.evaluation;
+                [~,indices] = sort([evaluation.accuracy]);
+                evaluation = flip(evaluation(indices));
+                evaluation = evaluation(1);  % Comment this if you want all evaluations in sorted order
+                stream.svm = stream.evaluation.svm;
+                optimalselection = stream.evaluation.trainingset.features;
+                stream.testingset = stream.testingset.select(optimalselection{:});
+                stream = score(stream,'eval');
+                stream.evaluation = evaluation;
             end
         else
             error(['Could not interpret command "',tokens{1},'".'])
@@ -277,9 +285,9 @@ function stream = score(varargin)
     end
 end
 
-function stream = restrictedsearch(partition,classifier)
-    decoder = {partition,classifier};
-    [~,stream] = my_ga(partition.trainingset.dimension,5,0.2,3,decoder);
+function stream = restrictedsearch(trainingset,classifier)
+    decoder = {trainingset,classifier};
+    [~,stream] = my_ga(trainingset.dimension,5,0.2,3,decoder);
 end
 
 function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
@@ -334,14 +342,14 @@ function evaluations = fitness(encodings,decoder)
         if sum(encoding) == 0  % Cannot select zero features
             evaluations = [evaluations;struct()];
         else
-            partition = decoder{1};
+            trainingset = decoder{1};
             classifier = decoder{2};
-            allfeatures = partition.trainingset.features;
+            allfeatures = trainingset.features;
             selectedfs = allfeatures(find(encoding));
-            trainingset = partition.trainingset.select(selectedfs{:});
-            testset = partition.testset.select(selectedfs{:});
-            newpartition = struct('trainingset',trainingset,'testset',testset);
-            evaluations = [evaluations;score(newpartition,[classifier,' | eval'])];
+            vp = score(trainingset,'partition 3:1');  %TODO soft-code
+            vp.trainingset = vp.trainingset.select(selectedfs{:});
+            vp.testingset = vp.testingset.select(selectedfs{:});
+            evaluations = [evaluations;score(vp,[classifier,' | eval'])];
         end
     end
 end
