@@ -148,7 +148,7 @@ function stream = score(varargin)
             end
         elseif strcmp(tokens{1},'partition')
             [numerator,denominator] = str2fraction(tokens{2});
-            trainingindices = randperm(size(stream,1),numerator/denominator*size(stream,1))';
+            trainingindices = randperm(size(stream,1),round(numerator/denominator*size(stream,1)))';
             testindices = setdiff(1:size(stream,1),trainingindices)';
             trainedfs = stream(trainingindices);
             testedfs = stream(testindices);
