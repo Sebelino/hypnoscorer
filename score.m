@@ -146,7 +146,14 @@ function stream = score(varargin)
                 stream = rmfield(stream,'trainingset');
             else
                 features = tokens(2:end);
-                stream = stream.select(features{:});
+                if isa(stream,'LabeledFeaturevector')
+                    stream = stream.select(features{:});
+                elseif isfield(stream,'trainingset')
+                    newstream = struct();
+                    newstream.trainingset = stream.trainingset.select(features{:});
+                    newstream.testingset = stream.testingset.select(features{:});
+                    stream = newstream;
+                end
             end
         elseif strcmp(tokens{1},'partition')
             [numerator,denominator] = str2fraction(tokens{2});
@@ -194,7 +201,14 @@ function stream = score(varargin)
             end
         elseif strcmp(tokens{1},'organize')
             if strcmp(tokens{2},'dbn')
-                stream = dbnify(stream);
+                if isa(stream,'LabeledFeaturevector')
+                    stream = dbnify(stream);
+                elseif isfield(stream,'trainingset')
+                    newstream = struct();
+                    newstream.trainingset = score(stream.trainingset,filter{:});
+                    newstream.testingset = score(stream.testingset,filter{:});
+                    stream = newstream;
+                end
             elseif strcmp(tokens{2},'cluster')
                 k = str2num(tokens{3});
                 if isa(stream,'LabeledFeaturevector')
