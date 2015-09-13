@@ -58,6 +58,27 @@ classdef Featurevector < matlab.mixin.CustomDisplay
             [idx,C] = kmeans(m,k,'Distance','cityblock','Replicates',5);
             featurevectors = self.extend('Cluster',idx);
         end
+        function newfeaturevectors = change(self,replacement)
+            % Replaces this feature vector with new feature vectors specified by the argument
+            newfeaturevectors = self;
+            vectortemplate = struct();
+            for i = 1:size(replacement,2)
+                featurename = ['F',num2str(i)];
+                vectortemplate.(featurename) = 0;
+            end
+            featurenames = fieldnames(vectortemplate);
+            if isnumeric(replacement) && size(replacement,1) == numel(self)
+                for i = 1:numel(self)
+                    newvector = vectortemplate;
+                    for j = 1:size(replacement,2)
+                        newvector.(featurenames{j}) = replacement(i,j);
+                    end
+                    newfeaturevectors(i).Vector = newvector;
+                end
+            else
+                error('Unexpected input.')
+            end
+        end
     end
     methods(Access=protected)
         function displayScalarObject(self)

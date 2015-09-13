@@ -17,6 +17,10 @@ Or just click *Download ZIP* on this page.
 * [wfdb-toolbox](https://github.com/ikarosilva/wfdb-app-toolbox)
   * Make sure wfdb-toolbox/mcode/ is in your MATLAB path.
   * Alternatively, place the whole wfdb-toolbox directory in lib/ since lib/wfdb-toolbox/mcode is added to the path automatically.
+* [DBNToolbox](http://www.seas.upenn.edu/~wulsin/)
+  * Make sure DBNToolbox/lib/ is in your MATLAB path.
+  * Alternatively, place the whole DBNToolbox directory in lib/ since lib/DBNToolbox/lib is added
+  to the path automatically.
 
 ## Usage
 Coming soon...

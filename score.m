@@ -193,7 +193,9 @@ function stream = score(varargin)
                 stream.trainingset = newset';
             end
         elseif strcmp(tokens{1},'organize')
-            if strcmp(tokens{2},'cluster')
+            if strcmp(tokens{2},'dbn')
+                stream = dbnify(stream);
+            elseif strcmp(tokens{2},'cluster')
                 k = str2num(tokens{3});
                 if isa(stream,'LabeledFeaturevector')
                     stream = stream.kmeans(k);
