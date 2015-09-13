@@ -12,13 +12,13 @@ function newfeaturespace = dbnify(featurespace)
     traindata = data(k(1:floor(size(data,1)*5/6)),:);
     valdata = data(k(floor(size(data,1)*5/6)+1:end),:);
 
-    layerSize = [5]; % Hidden layer sizes
+    layerSize = [3]; % Hidden layer sizes
 
     rbmParams.numEpochs = 50;
     rbmParams.verbosity = 1;
     rbmParams.miniBatchSize = 1000;
     rbmParams.attemptLoad = 0;
-    dbnParams.numEpochs = 10;
+    dbnParams.numEpochs = 20;
     dbnParams.verbosity = 1;
     dbnParams.miniBatchSize = 1000;
     dbnParams.attemptLoad = 0;
@@ -37,7 +37,10 @@ function newfeaturespace = dbnify(featurespace)
     % This garbage appears after using the DBNToolbox functions
     delete dnn.dnn_obj.mat nnl.*.rbm_obj.mat
 
-    newfeaturespace = featurespace.change(topLayerActivs);
+    for i = 1:size(topLayerActivs,2)
+        featurename = ['F',num2str(i)];
+        newfeaturespace = featurespace.extend(featurename,topLayerActivs(:,i));
+    end
 end
 
 
