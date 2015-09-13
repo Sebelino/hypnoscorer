@@ -340,7 +340,7 @@ function evaluations = fitness(encodings,decoder)
     for row = 1:size(encodings,1)
         encoding = encodings(row,:);
         if sum(encoding) == 0  % Cannot select zero features
-            evaluations = [evaluations;struct()];
+            error('Selected zero features!')
         else
             trainingset = decoder{1};
             classifier = decoder{2};
