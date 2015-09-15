@@ -234,8 +234,8 @@ function stream = score(varargin)
                     plothypnogram(stream.predictedset)
                 end
             end
-            if numel(stream) > 1 && isfield(stream,'accuracy')
-                bar([stream.accuracy]')
+            if numel(tokens) >= 2 && strcmp(tokens{2},'bar')
+                bar([stream.evaluation.accuracy]')
             elseif isfield(stream,'svm')
                 stream.svm.plot()
             end
