@@ -309,6 +309,7 @@ end
 function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
     generation = round(rand(N,dimensions));
     disp(['Computing generation 1/',num2str(runs),'...'])
+    generation = nonzeroize(generation);
     evaluations = fitness(generation,decoder);
     [~,argmax] = max([evaluations.accuracy]);
 
@@ -333,6 +334,7 @@ function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
             % Mutation
             mutation = rand(1,dimensions) < mutationrate;
             offspring(row,:) = xor(offspring(row,:),mutation);
+            offspring = nonzeroize(offspring);
             % Update fitnesses
             offspringevaluations(row,:) = fitness(offspring(row,:),decoder);
         end
@@ -345,10 +347,24 @@ function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
         generation = allindividuals(sortindices(1:N),:);
         evaluations = allevaluations(sortindices(1:N),:);
     end
-    [generation,[evaluations.accuracy]']
+    %[generation,[evaluations.accuracy]']
     [~,argmax] = max([evaluations.accuracy]);
     fittest = generation(argmax,:);
     evaluation = evaluations(argmax,:);
+end
+
+function newrows = nonzeroize(rows)
+    % If there is a row with sum = 0, set it to a random nonzero binary vector.
+    newrows = rows;
+    indices = find(sum(rows,2)==0);
+    if isempty(indices)
+        newrows = rows;
+    else
+        for i = indices
+            newrows(i,:) = round(rand(1,size(rows,2)));
+        end
+        newrows = nonzeroize(newrows);
+    end
 end
 
 function evaluations = fitness(encodings,decoder)
