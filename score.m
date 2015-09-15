@@ -201,8 +201,9 @@ function stream = score(varargin)
             end
         elseif strcmp(tokens{1},'organize')
             if strcmp(tokens{2},'dbn')
+                layersizes = [str2num(tokens{3}),str2num(tokens{4})];
                 if isa(stream,'LabeledFeaturevector')
-                    stream = dbnify(stream);
+                    stream = dbnify(stream,layersizes);
                 elseif isfield(stream,'trainingset')
                     newstream = struct();
                     newstream.trainingset = score(stream.trainingset,filter{:});

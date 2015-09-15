@@ -1,6 +1,8 @@
 % Adapted from Martin Längkvist's code: http://aass.oru.se/~mlt/sleep.zip
 
-function newfeaturespace = dbnify(featurespace)
+% layersize: List containing the number of hidden nodes in each hidden layer, arranged from the one
+% closest to the visible layer to the one farthest away.
+function newfeaturespace = dbnify(featurespace,layersizes)
     addpath('lib/DBNToolbox/lib/')
 
     data = featurespace.matrix();
@@ -12,8 +14,6 @@ function newfeaturespace = dbnify(featurespace)
     traindata = data(k(1:floor(size(data,1)*5/6)),:);
     valdata = data(k(floor(size(data,1)*5/6)+1:end),:);
 
-    layerSize = [3]; % Hidden layer sizes
-
     rbmParams.numEpochs = 50;
     rbmParams.verbosity = 1;
     rbmParams.miniBatchSize = 1000;
@@ -24,7 +24,7 @@ function newfeaturespace = dbnify(featurespace)
     dbnParams.attemptLoad = 0;
 
     disp('Unsupervised pre-training...');
-    nnLayers = GreedyLayerTrain(traindata, valdata, layerSize, 'RBM', rbmParams);
+    nnLayers = GreedyLayerTrain(traindata, valdata, layersizes, 'RBM', rbmParams);
     dnn = DeepNN(nnLayers, dbnParams);
     disp('Unsupervised backprop...');
     dnn.Train(traindata, valdata);
@@ -33,6 +33,7 @@ function newfeaturespace = dbnify(featurespace)
     % Inference on train data
     [~,layerActivs] = dnn.PropLayerActivs(data);
     topLayerActivs = layerActivs{numel(layerSize)};
+    topLayerActivs = layerActivs{numel(layersizes)};
 
     % This garbage appears after using the DBNToolbox functions
     delete dnn.dnn_obj.mat nnl.*.rbm_obj.mat
