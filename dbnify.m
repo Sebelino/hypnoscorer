@@ -37,9 +37,10 @@ function newfeaturespace = dbnify(featurespace)
     % This garbage appears after using the DBNToolbox functions
     delete dnn.dnn_obj.mat nnl.*.rbm_obj.mat
 
+    newfeaturespace = featurespace;
     for i = 1:size(topLayerActivs,2)
         featurename = ['F',num2str(i)];
-        newfeaturespace = featurespace.extend(featurename,topLayerActivs(:,i));
+        newfeaturespace = newfeaturespace.extend(featurename,topLayerActivs(:,i));
     end
 end
 
