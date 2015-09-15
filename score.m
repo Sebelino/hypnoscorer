@@ -261,7 +261,7 @@ function stream = score(varargin)
                 plot(stream,{})
             elseif numel(stream) == 1 && isfield(stream,'trainingset') && isfield(stream,'testingset')
                 plot(stream.trainingset,{'','*','','off'})
-                plot(stream.testingingset,{'','.','','off'})
+                plot(stream.testingset,{'','.','','off'})
                 if isfield(stream,'predictedset')
                     pfs = stream.predictedset;
                     pfs = arrayfun(@(i){LabeledFeaturevector(pfs(i).Vector,pfs(i).Label)},(1:size(pfs,1)));
