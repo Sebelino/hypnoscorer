@@ -5,6 +5,10 @@
 function newfeaturespace = dbnify(featurespace,layersizes)
     addpath('lib/DBNToolbox/lib/')
 
+    if isempty(layersizes)
+        error('You specified no layer sizes for the DBN.')
+    end
+
     data = featurespace.matrix();
     data = data-repmat(min(data),size(data,1),1);
     data = data./repmat(max(data),size(data,1),1);
