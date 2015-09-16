@@ -32,7 +32,6 @@ function newfeaturespace = dbnify(featurespace,layersizes)
 
     % Inference on train data
     [~,layerActivs] = dnn.PropLayerActivs(data);
-    topLayerActivs = layerActivs{numel(layerSize)};
     topLayerActivs = layerActivs{numel(layersizes)};
 
     % This garbage appears after using the DBNToolbox functions
