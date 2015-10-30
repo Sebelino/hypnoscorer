@@ -18,13 +18,14 @@ function newfeaturespace = dbnify(featurespace,layersizes)
     traindata = data(k(1:floor(size(data,1)*5/6)),:);
     valdata = data(k(floor(size(data,1)*5/6)+1:end),:);
 
+    % BIAS = -4
     rbmParams.numEpochs = 50;
     rbmParams.verbosity = 1;
-    rbmParams.miniBatchSize = 1000;
+    rbmParams.miniBatchSize = 100;
     rbmParams.attemptLoad = 0;
     dbnParams.numEpochs = 20;
     dbnParams.verbosity = 1;
-    dbnParams.miniBatchSize = 1000;
+    dbnParams.miniBatchSize = 100;
     dbnParams.attemptLoad = 0;
 
     disp('Unsupervised pre-training...');
