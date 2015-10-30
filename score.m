@@ -122,28 +122,31 @@ function stream = score(varargin)
             fs = [fs{:}]';
             stream = fs;
         elseif strcmp(tokens{1},'select')
-            if size(tokens,2) == 3 && strcmp(tokens{2},'exhaustive')
+            if size(tokens,2) == 4
                 classifier = tokens{3};
-                allfeatures = stream.trainingset.features;
-                selections = [];
-                for i = 1:numel(allfeatures)
-                    selections = [selections;num2cell(nchoosek(allfeatures,i),2)];
+                kernel = tokens{4};
+                if strcmp(tokens{2},'exhaustive')
+                    allfeatures = stream.trainingset.features;
+                    selections = [];
+                    for i = 1:numel(allfeatures)
+                        selections = [selections;num2cell(nchoosek(allfeatures,i),2)];
+                    end
+                    vpartitions = [];
+                    for selection = selections'
+                        sel = selection{:};
+                        vps = score(stream.trainingset,'partition 10 fold');
+                        keyboard
+                        vp.trainingset = vp.trainingset.select(sel{:});
+                        vp.testingset = vp.testingset.select(sel{:});
+                        %disp(['Evaling ',strjoin(sel),' / ',num2str(numel(selections))])
+                        vpartitions = [vpartitions;score(vp,[classifier,' ',kernel,' | eval'])];
+                    end
+                    stream.evaluation = vpartitions;
+                    stream = rmfield(stream,'trainingset');
+                elseif strcmp(tokens{2},'restricted')
+                    stream.evaluation = restrictedsearch(stream.trainingset,classifier,kernel);
+                    stream = rmfield(stream,'trainingset');
                 end
-                vpartitions = [];
-                for selection = selections'
-                    sel = selection{:};
-                    vp = score(stream.trainingset,'partition 3:1');  % TODO soft-code
-                    vp.trainingset = vp.trainingset.select(sel{:});
-                    vp.testingset = vp.testingset.select(sel{:});
-                    disp(['Evaling ',strjoin(sel),' / ',num2str(numel(selections))])
-                    vpartitions = [vpartitions;score(vp,[classifier,' | eval'])];
-                end
-                stream.evaluation = vpartitions;
-                stream = rmfield(stream,'trainingset');
-            elseif size(tokens,2) == 3 && strcmp(tokens{2},'restricted')
-                classifier = tokens{3};
-                stream.evaluation = restrictedsearch(stream.trainingset,classifier);
-                stream = rmfield(stream,'trainingset');
             else
                 features = tokens(2:end);
                 if isa(stream,'LabeledFeaturevector')
@@ -156,12 +159,24 @@ function stream = score(varargin)
                 end
             end
         elseif strcmp(tokens{1},'partition')
-            [numerator,denominator] = str2fraction(tokens{2});
-            trainingindices = randperm(size(stream,1),round(numerator/denominator*size(stream,1)))';
-            testindices = setdiff(1:size(stream,1),trainingindices)';
-            trainedfs = stream(trainingindices);
-            testedfs = stream(testindices);
-            stream = struct('trainingset',trainedfs,'testingset',testedfs);
+            if numel(tokens) >= 3 && strcmp(tokens{3},'fold')
+                foldcount = str2num(tokens{2});
+                foldindices = crossvalind('Kfold',numel(stream),foldcount);
+                folds = [];
+                for i = 1:foldcount
+                    trainingset = stream(find(foldindices~=i));
+                    validationset = stream(find(foldindices==i));
+                    folds = [struct('trainingset',trainingset,'testingset',validationset),folds];
+                end
+                stream = folds;
+            else
+                [numerator,denominator] = str2fraction(tokens{2});
+                trainingindices = randperm(size(stream,1),round(numerator/denominator*size(stream,1)))';
+                testindices = setdiff(1:size(stream,1),trainingindices)';
+                trainedfs = stream(trainingindices);
+                testedfs = stream(testindices);
+                stream = struct('trainingset',trainedfs,'testingset',testedfs);
+            end
         elseif strcmp(tokens{1},'bundle')
             bundles = tokens(2:end);
             newlabel = 'A';
@@ -236,7 +251,22 @@ function stream = score(varargin)
                 end
             end
             if numel(tokens) >= 2 && strcmp(tokens{2},'bar')
-                bar([stream.evaluation.accuracy]')
+                if numel(tokens) >= 3 && strcmp(tokens{3},'mitzvah')
+                    featurecount = ceil(log2(numel(stream.evaluation)));
+                    bars = {};
+                    ctr = 1;
+                    for i = 1:featurecount
+                        bars = {bars{:},[stream.evaluation(ctr:ctr+nchoosek(featurecount,i)-1).accuracy]};
+                        ctr = ctr + nchoosek(featurecount,i);
+                    end
+                    bars = cell2mat(arrayfun(@(b){[mean(b{:});max(b{:})]},bars))';
+                    bar(bars)
+                    title('Average accuracy for different feature selections')
+                    xlabel('Number of features in selection')
+                    ylabel('Accuracy')
+                else
+                    bar([stream.evaluation.accuracy]')
+                end
             elseif isfield(stream,'svm')
                 stream.svm.plot()
             end
@@ -273,18 +303,22 @@ function stream = score(varargin)
                 end
             end
         elseif strcmp(tokens{1},'svm')
-            stream.svm = SVM(stream.trainingset);
+            stream.svm = SVM(stream.trainingset,tokens{2});
         elseif strcmp(tokens{1},'eval')
             if isfield(stream,'svm')
                 stream.predictedset = stream.svm.predict(stream.testingset);
-                labels = num2cell([[stream.predictedset.Label]',[stream.testingset.Label]'],2);
-                tp = sum(arrayfun(@(l)strcmp(l,'AA'),labels));  % Assumes that W is bundled before 123R
-                tn = sum(arrayfun(@(l)strcmp(l,'BB'),labels));
-                fp = sum(arrayfun(@(l)strcmp(l,'BA'),labels));
-                fn = sum(arrayfun(@(l)strcmp(l,'AB'),labels));
-                stream.accuracy = (tp+tn)/(tp+tn+fp+fn);
-                stream.sensitivity = tp/(tp+fn);
-                stream.specificity = tn/(tn+fp);
+                plabels = [stream.predictedset.Label]';
+                tlabels = [stream.testingset.Label]';
+                diff = plabels-tlabels;
+                diff(diff~=0) = 1;
+                stream.accuracy = 1-sum(diff)/size(diff,1);
+                m = [tlabels,plabels];
+                [~,arrangement] = sort(m(:,1));
+                tlabels = m(arrangement,1);
+                plabels = m(arrangement,2);
+                [confmat,order] = confusionmat(tlabels,plabels);
+                stream.confusionmatrix = confmat;
+                stream.confusionorder = order;
             else
                 evaluation = stream.evaluation;
                 [~,indices] = sort([evaluation.accuracy]);
@@ -302,9 +336,9 @@ function stream = score(varargin)
     end
 end
 
-function stream = restrictedsearch(trainingset,classifier)
-    decoder = {trainingset,classifier};
-    [~,stream] = my_ga(trainingset.dimension,5,0.2,3,decoder);
+function stream = restrictedsearch(trainingset,classifier,kernel)
+    decoder = {trainingset,classifier,kernel};
+    [~,stream] = my_ga(trainingset.dimension,5,0.2,5,decoder);
 end
 
 function [fittest,evaluation] = my_ga(dimensions,N,mutationrate,runs,decoder)
@@ -377,12 +411,13 @@ function evaluations = fitness(encodings,decoder)
         else
             trainingset = decoder{1};
             classifier = decoder{2};
+            kernel = decoder{3};
             allfeatures = trainingset.features;
             selectedfs = allfeatures(find(encoding));
             vp = score(trainingset,'partition 3:1');  %TODO soft-code
             vp.trainingset = vp.trainingset.select(selectedfs{:});
             vp.testingset = vp.testingset.select(selectedfs{:});
-            evaluations = [evaluations;score(vp,[classifier,' | eval'])];
+            evaluations = [evaluations;score(vp,[classifier,' ',kernel,' | eval'])];
         end
     end
 end
@@ -427,12 +462,23 @@ function [record,eeg,labels] = readrecord(spec)
     records = {
     'slp01a/slp01a',
     'shhs/shhs1-200001'
+    'shhs/shhs1-200002'
+    'shhs/shhs1-200003'
+    'shhs/shhs1-200004'
+    'shhs/shhs1-200005'
+    'shhs/shhs1-200006'
+    'shhs/shhs1-200007'
+    'shhs/shhs1-200008'
+    'shhs/shhs1-200009'
+    'shhs/shhs1-200010'
     }; % TODO cache this data
     matches = strfind(records,spec);
-    matchindices = find(cellfun(@(y)(length(y) == 2),matches));
+    matchindices = find(cellfun(@(y)~isempty(y),matches));
     record = records{1};
     if length(matchindices) > 0
         record = records{matchindices(1)};
+    else
+        error(['Found no record that matches input "',spec,'".'])
     end
     cachepath = cachepath(record);
     if exist(cachepath)
@@ -489,10 +535,16 @@ function [eeg,labels] = readsignal(recordpath)
             key = row{1}(1); value = row{1}(2);
             labels(annotations==key) = value;
         end
+        labels = randk2aasm(labels);
         tm = (0:epochlength/values_per_epoch:size(epochs,1)*epochlength);
         tm = tm(1:size(physicaleeg,1));
         eeg = Signal(tm',unit,physicaleeg);
     else
         error(['Cannot decide on a reading method for ',recordpath])
     end
+end
+
+function relabeling = randk2aasm(labels)
+    relabeling = labels;
+    relabeling(relabeling=='4') = '3';
 end

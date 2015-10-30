@@ -5,7 +5,8 @@ classdef SVM < Classifier
         Model % Struct mapping two labels (string containing two characters and a leading 'L') to a SVM model
     end
     methods
-        function self = SVM(labeledfeaturevectors)
+        % kernel = 'linear' | 'rbf'
+        function self = SVM(labeledfeaturevectors,kernel)
             predictormatrix = labeledfeaturevectors.matrix();
             labels = [labeledfeaturevectors.Label]';
             classes = unique(labels);
