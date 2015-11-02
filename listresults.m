@@ -5,6 +5,10 @@ function listresults
     a_rbf_accuracies = [];
     b_lin_accuracies = [];
     b_rbf_accuracies = [];
+    a_lin_featurefreq = struct('Mean',0,'Variance',0,'Skewness',0,'Kurtosis',0,'HjorthMobility',0,'HjorthComplexity',0,'Amplitude',0,'F1',0,'F2',0,'F3',0);  % TODO Soft-code
+    a_rbf_featurefreq = a_lin_featurefreq;
+    b_lin_featurefreq = a_lin_featurefreq;
+    b_rbf_featurefreq = b_lin_featurefreq;
     for i = 1:numel(files)
         load(files{i})
         e1 = evaluations1(1);
@@ -19,9 +23,21 @@ function listresults
         if strfind(files{i},'lin')
             a_lin_accuracies = [a_lin_accuracies e1.accuracy];
             b_lin_accuracies = [b_lin_accuracies e2.accuracy];
+            for f = e1.testingset.features'
+                a_lin_featurefreq.(f{:}) = a_lin_featurefreq.(f{:}) + 1;
+            end
+            for f = e2.testingset.features'
+                b_lin_featurefreq.(f{:}) = b_lin_featurefreq.(f{:}) + 1;
+            end
         elseif strfind(files{i},'rbf')
             a_rbf_accuracies = [a_rbf_accuracies e1.accuracy];
             b_rbf_accuracies = [b_rbf_accuracies e2.accuracy];
+            for f = e1.testingset.features'
+                a_rbf_featurefreq.(f{:}) = a_rbf_featurefreq.(f{:}) + 1;
+            end
+            for f = e2.testingset.features'
+                b_rbf_featurefreq.(f{:}) = b_rbf_featurefreq.(f{:}) + 1;
+            end
         else
             error('MAT file is not marked lin nor rbf.')
         end
@@ -63,10 +79,50 @@ function listresults
     else
         disp(['u_rbf = ',num2str(u_rbf),' --> SIGNIFICANCE!!!!!!!!!!!1111111111111'])
     end
+    freqplot({a_lin_featurefreq,a_rbf_featurefreq,b_lin_featurefreq,b_rbf_featurefreq},{'Scorer A, linear kernel','Scorer A, RBF kernel','Scorer B, linear kernel','Scorer B, RBF kernel'})
+    freqplot({addStructs(a_lin_featurefreq,a_rbf_featurefreq),addStructs(b_lin_featurefreq,b_rbf_featurefreq)},{'Scorer A','Scorer B'})
+%    freqplot({addStructs(a_lin_featurefreq,b_lin_featurefreq),addStructs(a_rbf_featurefreq,b_rbf_featurefreq)},{'Linear','RBF'})
+end
+
+function freqplot(freqs,descriptions)
+    figure
+    matfreqs = cell2mat(arrayfun(@(x){cell2mat(struct2cell(x{1}))},freqs));
+    plt = bar(matfreqs);
+    set(gca,'XTickLabel',fieldnames(freqs{1}))
+    legend(plt,descriptions)
 end
 
 function filenames = matfiles
     f = dir('.');
     r = regexpi({f.name},'.*\.mat','match');
     filenames = [r{:}];
+end
+
+% http://stackoverflow.com/a/17267634
+function S = addStructs(S1, S2)
+    fNames1 = fieldnames(S1);
+    fNames2 = fieldnames(S2);
+    diff = setdiff(fNames1, fNames2);
+    if ~isempty(diff)
+       error('addStructs: structures do not contain same field names')
+    end
+    numFields = length(fNames1);
+    for i=1:numFields
+        % get values for each struct for this field
+        fNameCell = fNames1(i);
+        fName = fNameCell{:};
+        val1 = S1.(fName);
+        val2 = S2.(fName);
+        % if field non-numeric, use value from first struct
+        if (~isnumeric(val1) || ~isnumeric(val2) )
+            S.(fName) = val1;
+        % if fields numeric but not the same length, use value
+        % from first struct
+        elseif (length(val1) ~= length(val2) )
+            S.(fName) = val1;
+        % if fields numeric and same length, add them together
+        else
+            S.(fName) = val1 + val2;
+        end
+    end
 end
