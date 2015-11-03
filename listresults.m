@@ -1,3 +1,5 @@
+% Warning: Crappy code ---v
+
 function listresults
     files = matfiles();
 
@@ -5,10 +7,15 @@ function listresults
     a_rbf_accuracies = [];
     b_lin_accuracies = [];
     b_rbf_accuracies = [];
+    allstages = {'1','2','3','R','W'};
     a_lin_featurefreq = struct('Mean',0,'Variance',0,'Skewness',0,'Kurtosis',0,'HjorthMobility',0,'HjorthComplexity',0,'Amplitude',0,'F1',0,'F2',0,'F3',0);  % TODO Soft-code
     a_rbf_featurefreq = a_lin_featurefreq;
     b_lin_featurefreq = a_lin_featurefreq;
     b_rbf_featurefreq = b_lin_featurefreq;
+    a_lin_confusion = zeros(numel(allstages));
+    a_rbf_confusion = a_lin_confusion;
+    b_lin_confusion = a_lin_confusion;
+    b_rbf_confusion = a_lin_confusion;
     for i = 1:numel(files)
         load(files{i})
         e1 = evaluations1(1);
@@ -29,6 +36,8 @@ function listresults
             for f = e2.testingset.features'
                 b_lin_featurefreq.(f{:}) = b_lin_featurefreq.(f{:}) + 1;
             end
+            a_lin_confusion = a_lin_confusion + reencode_confusion(c1,strsplit(o1),allstages);
+            b_lin_confusion = b_lin_confusion + reencode_confusion(c2,strsplit(o2),allstages);
         elseif strfind(files{i},'rbf')
             a_rbf_accuracies = [a_rbf_accuracies e1.accuracy];
             b_rbf_accuracies = [b_rbf_accuracies e2.accuracy];
@@ -38,6 +47,8 @@ function listresults
             for f = e2.testingset.features'
                 b_rbf_featurefreq.(f{:}) = b_rbf_featurefreq.(f{:}) + 1;
             end
+            a_rbf_confusion = a_rbf_confusion + reencode_confusion(c1,strsplit(o1),allstages);
+            b_rbf_confusion = b_rbf_confusion + reencode_confusion(c2,strsplit(o2),allstages);
         else
             error('MAT file is not marked lin nor rbf.')
         end
@@ -58,6 +69,10 @@ function listresults
     a_rbf_std_estimate = std(a_rbf_accuracies);
     b_lin_std_estimate = std(b_lin_accuracies);
     b_rbf_std_estimate = std(b_rbf_accuracies);
+    a_lin_confusion = a_lin_confusion./numel(a_lin_accuracies);
+    a_rbf_confusion = a_rbf_confusion./numel(a_rbf_accuracies);
+    b_lin_confusion = b_lin_confusion./numel(b_lin_accuracies);
+    b_rbf_confusion = b_rbf_confusion./numel(b_rbf_accuracies);
     disp(['Average accuracy of A, linear | ',num2str(a_lin_mean_estimate),' +-~ ',num2str(a_lin_std_estimate)])
     disp(['Average accuracy of B, linear | ',num2str(b_lin_mean_estimate),' +-~ ',num2str(b_lin_std_estimate)])
     disp(['Average accuracy of A, RBF    | ',num2str(a_rbf_mean_estimate),' +-~ ',num2str(a_rbf_std_estimate)])
@@ -79,9 +94,30 @@ function listresults
     else
         disp(['u_rbf = ',num2str(u_rbf),' --> SIGNIFICANCE!!!!!!!!!!!1111111111111'])
     end
+    disp('Confusion matrix, scorer A, linear kernel |')
+    printmat(a_lin_confusion,'',strjoin(allstages),strjoin(allstages));
+    disp('Confusion matrix, scorer A, RBF kernel |')
+    printmat(a_rbf_confusion,'',strjoin(allstages),strjoin(allstages));
+    disp('Confusion matrix, scorer B, linear kernel |')
+    printmat(b_lin_confusion,'',strjoin(allstages),strjoin(allstages));
+    disp('Confusion matrix, scorer B, RBF kernel |')
+    printmat(b_rbf_confusion,'',strjoin(allstages),strjoin(allstages));
+
     freqplot({a_lin_featurefreq,a_rbf_featurefreq,b_lin_featurefreq,b_rbf_featurefreq},{'Scorer A, linear kernel','Scorer A, RBF kernel','Scorer B, linear kernel','Scorer B, RBF kernel'})
     freqplot({addStructs(a_lin_featurefreq,a_rbf_featurefreq),addStructs(b_lin_featurefreq,b_rbf_featurefreq)},{'Scorer A','Scorer B'})
 %    freqplot({addStructs(a_lin_featurefreq,b_lin_featurefreq),addStructs(a_rbf_featurefreq,b_rbf_featurefreq)},{'Linear','RBF'})
+end
+
+function c2 = reencode_confusion(c1,o1,o2)
+    % INV o1 \subseteq o2
+    c2 = zeros(numel(o2));
+    for i = 1:numel(o1)
+        for j = 1:numel(o1)
+            k = strmatch(o1{i},o2);  % TODO strmatch alternative
+            l = strmatch(o1{j},o2);
+            c2(k,l) = c1(i,j);
+        end
+    end
 end
 
 function freqplot(freqs,descriptions)
