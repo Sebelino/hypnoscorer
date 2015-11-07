@@ -95,17 +95,17 @@ function listresults
         disp(['u_rbf = ',num2str(u_rbf),' --> SIGNIFICANCE!!!!!!!!!!!1111111111111'])
     end
     disp('Confusion matrix, scorer A, linear kernel |')
-    printmat(a_lin_confusion,'',strjoin(allstages),strjoin(allstages));
+    printmat(round(100*a_lin_confusion,1),'',strjoin(allstages),strjoin(allstages));
     disp('Confusion matrix, scorer A, RBF kernel |')
-    printmat(a_rbf_confusion,'',strjoin(allstages),strjoin(allstages));
+    printmat(round(100*a_rbf_confusion,1),'',strjoin(allstages),strjoin(allstages));
     disp('Confusion matrix, scorer B, linear kernel |')
-    printmat(b_lin_confusion,'',strjoin(allstages),strjoin(allstages));
+    printmat(round(100*b_lin_confusion,1),'',strjoin(allstages),strjoin(allstages));
     disp('Confusion matrix, scorer B, RBF kernel |')
-    printmat(b_rbf_confusion,'',strjoin(allstages),strjoin(allstages));
+    printmat(round(100*b_rbf_confusion,1),'',strjoin(allstages),strjoin(allstages));
 
     freqplot({a_lin_featurefreq,a_rbf_featurefreq,b_lin_featurefreq,b_rbf_featurefreq},{'Scorer A, linear kernel','Scorer A, RBF kernel','Scorer B, linear kernel','Scorer B, RBF kernel'})
     freqplot({addStructs(a_lin_featurefreq,a_rbf_featurefreq),addStructs(b_lin_featurefreq,b_rbf_featurefreq)},{'Scorer A','Scorer B'})
-%    freqplot({addStructs(a_lin_featurefreq,b_lin_featurefreq),addStructs(a_rbf_featurefreq,b_rbf_featurefreq)},{'Linear','RBF'})
+    freqplot({addStructs(a_lin_featurefreq,b_lin_featurefreq),addStructs(a_rbf_featurefreq,b_rbf_featurefreq)},{'Linear','RBF'})
 end
 
 function c2 = reencode_confusion(c1,o1,o2)
