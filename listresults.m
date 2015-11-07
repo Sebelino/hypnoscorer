@@ -126,6 +126,9 @@ function freqplot(freqs,descriptions)
     plt = bar(matfreqs);
     set(gca,'XTickLabel',fieldnames(freqs{1}))
     legend(plt,descriptions)
+    title('Frequency of selected features')
+    xlabel('Features')
+    ylabel('Frequency (Number of times selected)')
 end
 
 function filenames = matfiles
