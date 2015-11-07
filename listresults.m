@@ -124,7 +124,9 @@ function freqplot(freqs,descriptions)
     figure
     matfreqs = cell2mat(arrayfun(@(x){cell2mat(struct2cell(x{1}))},freqs));
     plt = bar(matfreqs);
-    set(gca,'XTickLabel',fieldnames(freqs{1}))
+    ax = gca;
+    set(ax,'XTickLabel',fieldnames(freqs{1}))
+    ax.XTickLabelRotation = 45;
     legend(plt,descriptions)
     title('Frequency of selected features')
     xlabel('Features')
