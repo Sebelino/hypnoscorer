@@ -324,16 +324,27 @@ function stream = score(varargin)
                 [confmat,order] = confusionmat(tlabels,plabels);
                 stream.confusionmatrix = confmat;
                 stream.confusionorder = order;
-            else
+            elseif numel(stream) > 1
+                stream = stream(1);
+            else  % test set + validationevaluations -> trueevaluations
                 evaluation = stream.evaluation;
-                [~,indices] = sort([evaluation.accuracy]);
-                evaluation = flip(evaluation(indices));
-                evaluation = evaluation(1);  % Comment this if you want all evaluations in sorted order
-                stream.svm = evaluation.svm;
-                optimalselection = evaluation.trainingset.features;
-                stream.testingset = stream.testingset.select(optimalselection{:});
-                stream = score(stream,'eval');
-                stream.evaluation = evaluation;
+                newevaluations = [];
+                for e = evaluation'
+                    newe = struct();
+                    newe.svm = e.svm;
+                    optimalselection = e.trainingset.features;
+                    newe.testingset = stream.testingset;
+                    newe.trainingset = e.trainingset;
+                    newe.validationset = e.testingset;
+                    newe.testingset = stream.testingset.select(optimalselection{:});
+                    newe.validationconfusionmatrix = e.confusionmatrix;
+                    newe.validationconfusionorder = e.confusionorder;
+                    newe = score(newe,'eval');
+                    newevaluations = [newevaluations;newe];
+                end
+                [~,indices] = sort([newevaluations.accuracy]);
+                newevaluations = flip(newevaluations(indices));
+                stream = newevaluations;
             end
         else
             error(['Could not interpret command "',tokens{1},'".'])
