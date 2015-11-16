@@ -134,12 +134,17 @@ function stream = score(varargin)
                     vpartitions = [];
                     for selection = selections'
                         sel = selection{:};
-                        vps = score(stream.trainingset,'partition 10 fold');
-                        keyboard
-                        vp.trainingset = vp.trainingset.select(sel{:});
-                        vp.testingset = vp.testingset.select(sel{:});
-                        %disp(['Evaling ',strjoin(sel),' / ',num2str(numel(selections))])
-                        vpartitions = [vpartitions;score(vp,[classifier,' ',kernel,' | eval'])];
+                        disp(['Selection: ',strjoin(sel)])
+                        vps = score(stream.trainingset,'partition 5 fold');
+                        for i = 1:numel(vps)
+                            vps(i).trainingset = vps(i).trainingset.select(sel{:});
+                            vps(i).testingset = vps(i).testingset.select(sel{:});
+                        end
+                        evals = arrayfun(@(p)score(p,[classifier,' ',kernel,' | eval']),vps);
+                        accuracies = arrayfun(@(e)e.accuracy,evals);
+                        medianindex = find(accuracies == median(accuracies));
+                        medianindex = medianindex(1);  % Two accuracies are sometimes the same
+                        vpartitions = [vpartitions;evals(medianindex)];
                     end
                     stream.evaluation = vpartitions;
                     stream = rmfield(stream,'trainingset');
