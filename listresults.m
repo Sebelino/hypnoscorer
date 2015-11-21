@@ -181,9 +181,10 @@ function exhaustiveresults
     accuracyhighs = cellfun(@(a) max(a(:)),accuracyhistogram)-accuracymeans;
     figure
     plt = bar(accuracymeans);
+    plt.FaceColor = [0.8 0.8 1];
     hold on
     errorbar((1:7),accuracymeans,accuracylows,accuracyhighs,'xk')
-    title('Scorer accuracy in respect to size of feature selection')
+    title('Scorer accuracy with respect to size of feature selection')
     xlabel('Number of features')
     ylabel('Accuracy')
 end
