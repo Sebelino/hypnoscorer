@@ -106,6 +106,7 @@ function listresults
     freqplot({a_lin_featurefreq,a_rbf_featurefreq,b_lin_featurefreq,b_rbf_featurefreq},{'Scorer A, linear kernel','Scorer A, RBF kernel','Scorer B, linear kernel','Scorer B, RBF kernel'})
     freqplot({addStructs(a_lin_featurefreq,a_rbf_featurefreq),addStructs(b_lin_featurefreq,b_rbf_featurefreq)},{'Scorer A','Scorer B'})
     freqplot({addStructs(a_lin_featurefreq,b_lin_featurefreq),addStructs(a_rbf_featurefreq,b_rbf_featurefreq)},{'Linear','RBF'})
+    exhaustiveresults
 end
 
 function c2 = reencode_confusion(c1,o1,o2)
@@ -138,6 +139,32 @@ function filenames = matfiles
     r = regexpi({f.name},'.*\.mat','match');
     filenames = [r{:}];
 end
+
+% List results from exhaustive search.
+function exhaustiveresults
+    record = '200001-lin-exhaustive';
+    load(record)
+
+    accuracies = [evals.accuracy];
+    numberoffeatures = 7;  % TODO Soft-code
+    accuracyhistogram = cell(1,numberoffeatures);
+    for i = 1:numel(evals)
+        e = evals(i);
+        d = numel(e.trainingset.features);
+        accuracyhistogram{d} = [accuracyhistogram{d};e.accuracy];
+    end
+    accuracymeans = cellfun(@(a) mean(a(:)),accuracyhistogram);
+    accuracylows = accuracymeans-cellfun(@(a) min(a(:)),accuracyhistogram);
+    accuracyhighs = cellfun(@(a) max(a(:)),accuracyhistogram)-accuracymeans;
+    figure
+    plt = bar(accuracymeans);
+    hold on
+    errorbar((1:7),accuracymeans,accuracylows,accuracyhighs,'xk')
+    title('Scorer accuracy in respect to size of feature selection')
+    xlabel('Number of features')
+    ylabel('Accuracy')
+end
+
 
 % http://stackoverflow.com/a/17267634
 function S = addStructs(S1, S2)
