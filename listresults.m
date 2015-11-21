@@ -114,6 +114,12 @@ function listresults
     lin_featurefreq = scalestruct(addStructs(a_lin_featurefreq,b_lin_featurefreq),0.5);
     rbf_featurefreq = scalestruct(addStructs(a_rbf_featurefreq,b_rbf_featurefreq),0.5);
     freqplot({a_featurefreq,b_featurefreq},{[descr{1},', scorer comparison'],{'Scorer A','Scorer B'}})
+    lin_featurefreq.F1 = lin_featurefreq.F1 * 2;  % Meta-feature freq roof is 30, not 60 TODO Soft-code
+    lin_featurefreq.F2 = lin_featurefreq.F2 * 2;
+    lin_featurefreq.F3 = lin_featurefreq.F3 * 2;
+    rbf_featurefreq.F1 = rbf_featurefreq.F1 * 2;
+    rbf_featurefreq.F2 = rbf_featurefreq.F2 * 2;
+    rbf_featurefreq.F3 = rbf_featurefreq.F3 * 2;
     freqplot({lin_featurefreq,rbf_featurefreq},{[descr{1},', kernel comparison'],{'Linear','RBF'}})
     exhaustiveresults
 end
