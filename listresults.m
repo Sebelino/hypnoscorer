@@ -96,10 +96,10 @@ function listresults
     end
     disp('Confusion matrix, scorer A, linear kernel |')
     printmat(round(100*a_lin_confusion,1),'',strjoin(allstages),strjoin(allstages));
-    disp('Confusion matrix, scorer A, RBF kernel |')
-    printmat(round(100*a_rbf_confusion,1),'',strjoin(allstages),strjoin(allstages));
     disp('Confusion matrix, scorer B, linear kernel |')
     printmat(round(100*b_lin_confusion,1),'',strjoin(allstages),strjoin(allstages));
+    disp('Confusion matrix, scorer A, RBF kernel |')
+    printmat(round(100*a_rbf_confusion,1),'',strjoin(allstages),strjoin(allstages));
     disp('Confusion matrix, scorer B, RBF kernel |')
     printmat(round(100*b_rbf_confusion,1),'',strjoin(allstages),strjoin(allstages));
 
