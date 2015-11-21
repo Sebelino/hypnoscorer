@@ -103,9 +103,18 @@ function listresults
     disp('Confusion matrix, scorer B, RBF kernel |')
     printmat(round(100*b_rbf_confusion,1),'',strjoin(allstages),strjoin(allstages));
 
-    freqplot({a_lin_featurefreq,a_rbf_featurefreq,b_lin_featurefreq,b_rbf_featurefreq},{'Scorer A, linear kernel','Scorer A, RBF kernel','Scorer B, linear kernel','Scorer B, RBF kernel'})
-    freqplot({addStructs(a_lin_featurefreq,a_rbf_featurefreq),addStructs(b_lin_featurefreq,b_rbf_featurefreq)},{'Scorer A','Scorer B'})
-    freqplot({addStructs(a_lin_featurefreq,b_lin_featurefreq),addStructs(a_rbf_featurefreq,b_rbf_featurefreq)},{'Linear','RBF'})
+    a_lin_featurefreq = scalestruct(a_lin_featurefreq,100/30);
+    b_lin_featurefreq = scalestruct(b_lin_featurefreq,100/30);
+    a_rbf_featurefreq = scalestruct(a_rbf_featurefreq,100/30);
+    b_rbf_featurefreq = scalestruct(b_rbf_featurefreq,100/30);
+    descr = {'Frequency of selected features',{'Scorer A, linear kernel','Scorer A, RBF kernel','Scorer B, linear kernel','Scorer B, RBF kernel'}};
+    freqplot({a_lin_featurefreq,a_rbf_featurefreq,b_lin_featurefreq,b_rbf_featurefreq},descr)
+    a_featurefreq = scalestruct(addStructs(a_lin_featurefreq,a_rbf_featurefreq),0.5);
+    b_featurefreq = scalestruct(addStructs(b_lin_featurefreq,b_rbf_featurefreq),0.5);
+    lin_featurefreq = scalestruct(addStructs(a_lin_featurefreq,b_lin_featurefreq),0.5);
+    rbf_featurefreq = scalestruct(addStructs(a_rbf_featurefreq,b_rbf_featurefreq),0.5);
+    freqplot({a_featurefreq,b_featurefreq},{[descr{1},', scorer comparison'],{'Scorer A','Scorer B'}})
+    freqplot({lin_featurefreq,rbf_featurefreq},{[descr{1},', kernel comparison'],{'Linear','RBF'}})
     exhaustiveresults
 end
 
@@ -128,10 +137,18 @@ function freqplot(freqs,descriptions)
     ax = gca;
     set(ax,'XTickLabel',fieldnames(freqs{1}))
     ax.XTickLabelRotation = 45;
-    legend(plt,descriptions)
-    title('Frequency of selected features')
+    legend(plt,descriptions{2})
+    title(descriptions{1})
     xlabel('Features')
-    ylabel('Frequency (Number of times selected)')
+    ylabel('Frequency (%)')
+end
+
+function thestruct = scalestruct(thestruct,factor)
+    fs = fieldnames(thestruct);
+    for i = 1:numel(fs)
+        f = fs{i};
+        thestruct.(f) = factor * thestruct.(f);
+    end
 end
 
 function filenames = matfiles
