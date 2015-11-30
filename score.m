@@ -423,15 +423,15 @@ function evaluations = fitness(encodings,decoder)
     trainingset = decoder{1};
     classifier = decoder{2};
     kernel = decoder{3};
+    allfeatures = trainingset.features;
     for row = 1:size(encodings,1)
         encoding = encodings(row,:);
         if sum(encoding) == 0  % Cannot select zero features
             error('Selected zero features!')
         else
-            allfeatures = trainingset.features;
             selectedfeatures = allfeatures(find(encoding));
             newfeaturespace = trainingset.select(selectedfeatures{:});
-            vps = score(trainingset,'partition 5 fold');  %TODO soft-code
+            vps = score(newfeaturespace,'partition 5 fold');  %TODO soft-code
             evals = arrayfun(@(p)score(p,[classifier,' ',kernel,' | eval']),vps);
             accuracies = arrayfun(@(e)e.accuracy,evals);
             medianindex = find(accuracies == median(accuracies));
