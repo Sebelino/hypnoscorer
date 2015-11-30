@@ -420,20 +420,23 @@ end
 
 function evaluations = fitness(encodings,decoder)
     evaluations = [];
+    trainingset = decoder{1};
+    classifier = decoder{2};
+    kernel = decoder{3};
     for row = 1:size(encodings,1)
         encoding = encodings(row,:);
         if sum(encoding) == 0  % Cannot select zero features
             error('Selected zero features!')
         else
-            trainingset = decoder{1};
-            classifier = decoder{2};
-            kernel = decoder{3};
             allfeatures = trainingset.features;
-            selectedfs = allfeatures(find(encoding));
-            vp = score(trainingset,'partition 3:1');  %TODO soft-code
-            vp.trainingset = vp.trainingset.select(selectedfs{:});
-            vp.testingset = vp.testingset.select(selectedfs{:});
-            evaluations = [evaluations;score(vp,[classifier,' ',kernel,' | eval'])];
+            selectedfeatures = allfeatures(find(encoding));
+            newfeaturespace = trainingset.select(selectedfeatures{:});
+            vps = score(trainingset,'partition 5 fold');  %TODO soft-code
+            evals = arrayfun(@(p)score(p,[classifier,' ',kernel,' | eval']),vps);
+            accuracies = arrayfun(@(e)e.accuracy,evals);
+            medianindex = find(accuracies == median(accuracies));
+            medianindex = medianindex(1);  % Two accuracies are sometimes the same
+            evaluations = [evaluations;evals(medianindex)];
         end
     end
 end
