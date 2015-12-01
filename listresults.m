@@ -79,8 +79,12 @@ function listresults
     disp(['Average accuracy of B, RBF    | ',num2str(b_rbf_mean_estimate),' +-~ ',num2str(b_rbf_std_estimate)])
     d_lin = sqrt(a_lin_std_estimate^2/numel(a_lin_accuracies)+b_lin_std_estimate^2/numel(b_lin_accuracies));
     d_rbf = sqrt(a_rbf_std_estimate^2/numel(a_rbf_accuracies)+b_rbf_std_estimate^2/numel(b_rbf_accuracies));
-    u_lin = (b_lin_mean_estimate-a_lin_mean_estimate)/d_lin;
-    u_rbf = (b_rbf_mean_estimate-a_rbf_mean_estimate)/d_rbf;
+    d_a = sqrt(a_lin_std_estimate^2/numel(a_lin_accuracies)+a_rbf_std_estimate^2/numel(a_rbf_accuracies));
+    d_b = sqrt(b_lin_std_estimate^2/numel(b_lin_accuracies)+b_rbf_std_estimate^2/numel(b_rbf_accuracies));
+    u_lin = (a_lin_mean_estimate-b_lin_mean_estimate)/d_lin;
+    u_rbf = (a_rbf_mean_estimate-b_rbf_mean_estimate)/d_rbf;
+    u_a = (a_lin_mean_estimate-a_rbf_mean_estimate)/d_a;
+    u_b = (b_lin_mean_estimate-b_rbf_mean_estimate)/d_b;
     significance95 = norminv(1-0.05/2);
     if abs(u_lin) < significance95
         disp([num2str(-significance95),' < ',num2str(u_lin),' < ',num2str(significance95)])
@@ -93,6 +97,18 @@ function listresults
         disp('Insignificant result --> no conclusion can be made.')
     else
         disp(['u_rbf = ',num2str(u_rbf),' --> SIGNIFICANCE!!!!!!!!!!!1111111111111'])
+    end
+    if abs(u_a) < significance95
+        disp([num2str(-significance95),' < ',num2str(u_a),' < ',num2str(significance95)])
+        disp('Insignificant result --> no conclusion can be made.')
+    else
+        disp(['u_a = ',num2str(u_a),' --> SIGNIFICANCE!!!!!!!!!!!1111111111111'])
+    end
+    if abs(u_b) < significance95
+        disp([num2str(-significance95),' < ',num2str(u_b),' < ',num2str(significance95)])
+        disp('Insignificant result --> no conclusion can be made.')
+    else
+        disp(['u_b = ',num2str(u_b),' --> SIGNIFICANCE!!!!!!!!!!!1111111111111'])
     end
     disp('Confusion matrix, scorer A, linear kernel |')
     printmat(round(100*a_lin_confusion,1),'',strjoin(allstages),strjoin(allstages));
