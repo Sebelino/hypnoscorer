@@ -16,6 +16,10 @@ function listresults
     a_rbf_confusion = a_lin_confusion;
     b_lin_confusion = a_lin_confusion;
     b_rbf_confusion = a_lin_confusion;
+    a_lin_featurecount = [];
+    a_rbf_featurecount = [];
+    b_lin_featurecount = [];
+    b_rbf_featurecount = [];
     for i = 1:numel(files)
         load(files{i})
         e1 = evaluations1(1);
@@ -36,6 +40,8 @@ function listresults
             for f = e2.testingset.features'
                 b_lin_featurefreq.(f{:}) = b_lin_featurefreq.(f{:}) + 1;
             end
+            a_lin_featurecount = [a_lin_featurecount numel(e1.testingset.features)];
+            b_lin_featurecount = [b_lin_featurecount numel(e2.testingset.features)];
             a_lin_confusion = a_lin_confusion + reencode_confusion(c1,strsplit(o1),allstages);
             b_lin_confusion = b_lin_confusion + reencode_confusion(c2,strsplit(o2),allstages);
         elseif strfind(files{i},'rbf.mat')
@@ -47,6 +53,8 @@ function listresults
             for f = e2.testingset.features'
                 b_rbf_featurefreq.(f{:}) = b_rbf_featurefreq.(f{:}) + 1;
             end
+            a_rbf_featurecount = [a_rbf_featurecount numel(e1.testingset.features)];
+            b_rbf_featurecount = [b_rbf_featurecount numel(e2.testingset.features)];
             a_rbf_confusion = a_rbf_confusion + reencode_confusion(c1,strsplit(o1),allstages);
             b_rbf_confusion = b_rbf_confusion + reencode_confusion(c2,strsplit(o2),allstages);
         else
@@ -110,6 +118,11 @@ function listresults
     else
         disp(['u_b = ',num2str(u_b),' --> SIGNIFICANCE!!!!!!!!!!!1111111111111'])
     end
+    disp(['Average feature selection size, scorer A, linear kernel | ',num2str(mean(a_lin_featurecount)),' +-~ ',num2str(std(a_lin_featurecount))])
+    disp(['Average feature selection size, scorer B, linear kernel | ',num2str(mean(b_lin_featurecount)),' +-~ ',num2str(std(b_lin_featurecount))])
+    disp(['Average feature selection size, scorer A, RBF kernel    | ',num2str(mean(a_rbf_featurecount)),' +-~ ',num2str(std(a_rbf_featurecount))])
+    disp(['Average feature selection size, scorer B, RBF kernel    | ',num2str(mean(b_rbf_featurecount)),' +-~ ',num2str(std(b_rbf_featurecount))])
+
     disp('Confusion matrix, scorer A, linear kernel |')
     printmat(round(100*a_lin_confusion,1),'',strjoin(allstages),strjoin(allstages));
     disp('Confusion matrix, scorer B, linear kernel |')
