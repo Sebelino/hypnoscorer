@@ -27,7 +27,7 @@ function listresults
         c2 = e2.confusionmatrix;
         c2 = c2./repmat(sum(c2,2),1,size(c2,1));
         o2 = strjoin(num2cell(e2.confusionorder));
-        if strfind(files{i},'lin')
+        if strfind(files{i},'lin.mat')
             a_lin_accuracies = [a_lin_accuracies e1.accuracy];
             b_lin_accuracies = [b_lin_accuracies e2.accuracy];
             for f = e1.testingset.features'
@@ -38,7 +38,7 @@ function listresults
             end
             a_lin_confusion = a_lin_confusion + reencode_confusion(c1,strsplit(o1),allstages);
             b_lin_confusion = b_lin_confusion + reencode_confusion(c2,strsplit(o2),allstages);
-        elseif strfind(files{i},'rbf')
+        elseif strfind(files{i},'rbf.mat')
             a_rbf_accuracies = [a_rbf_accuracies e1.accuracy];
             b_rbf_accuracies = [b_rbf_accuracies e2.accuracy];
             for f = e1.testingset.features'
@@ -50,7 +50,7 @@ function listresults
             a_rbf_confusion = a_rbf_confusion + reencode_confusion(c1,strsplit(o1),allstages);
             b_rbf_confusion = b_rbf_confusion + reencode_confusion(c2,strsplit(o2),allstages);
         else
-            error('MAT file is not marked lin nor rbf.')
+            disp(['Found a file not ending with lin.mat or rbf.mat: ',files{i},'. Ignoring...'])
         end
 
         disp(['Feature selection  | ' strjoin(e1.testingset.features)])
