@@ -163,6 +163,8 @@ To make a 2D plot of the feature space including labels, simply add `plot` to th
 >> score('load slp01a | segment 3 | extract | pca | plot')
 ```
 
+![Sample plot](https://cloud.githubusercontent.com/assets/837775/14084229/101172f2-f51a-11e5-8f19-970cec5cd635.png)
+
 ### Partitioning
 Coming soon...
 ### SVM classification
