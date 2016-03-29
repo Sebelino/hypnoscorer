@@ -6,10 +6,10 @@ function stream = score(varargin)
     % >> score(STREAM, 'FILTER ARG ... ARG | ... | FILTER ARG ... ARG')
     %
     % Example 1:
-    % >> score('load shh | segment 3 | extract | select Mean Variance | bundle 12RW 34M | partition 0.25 | svm | eval | plot')
+    % >> score('load shh | segment 3 | extract | select Mean Variance | bundle 12RW 34M | partition 0.25 | svm linear | eval | plot')
     % Or, alternatively:
     % >> vectors = score('load shh | segment 3 | extract | select Mean Variance')
-    % >> score(vectors,'bundle 12RW 34M | partition 0.25 | svm | eval | plot')
+    % >> score(vectors,'bundle 12RW 34M | partition 0.25 | svm linear | eval | plot')
     % This does the following:
     % 1. The signal and labels of the SHHS record are read from the record file.
     % 2. The signal is segmented into 3 segments per epoch (i.e. 10 second segments).
@@ -70,8 +70,8 @@ function stream = score(varargin)
     %     Input: Nx1 LabeledFeaturevector.
     %     Randomly partitions RATIO of the feature space into a training set and the rest into a test set.
     %     Output: 1x1 struct with fields trainingset, testingset.
-    % svm
-    %     Input: 1x1 struct with fields trainingset, testingset.
+    % svm KERNEL
+    %     Input: 1x1 struct with fields trainingset, testingset. KERNEL is either "linear" or "rbf"
     %     Constructs an SVM classifier from the training set.
     %     Output: 1x1 struct with fields trainingset, testingset, svm.
     % eval
