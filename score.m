@@ -447,7 +447,7 @@ function [numerator,denominator] = str2fraction(fracstr)
         numerator = str2num(parts{1});
         denominator = numerator+str2num(parts{2});
     else
-        numerator = str2num(tokens{2});
+        numerator = str2num(fracstr);
         denominator = 1;
     end
 end
