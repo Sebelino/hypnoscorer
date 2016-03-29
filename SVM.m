@@ -26,11 +26,11 @@ classdef SVM < Classifier
             % Predicts the labels for the given data
             alllabels = [];
             for f = fieldnames(self.Model)'
-                [labels,score] = predict(self.Model.(f{:}),predictors.matrix());
+                [labels,score] = self.Model.(f{:}).predict(predictors.matrix());
                 alllabels = [alllabels,labels];
             end
             %[M,F,C] = mode(uint8(alllabels)'); %TODO
-            winnerlabels = mode(alllabels')';
+            winnerlabels = mode(alllabels,2);
             featureset = arrayfun(@(i){LabeledFeaturevector(predictors(i).Vector,winnerlabels(i))},(1:size(winnerlabels,1)));
             featureset = [featureset{:}]';
         end
