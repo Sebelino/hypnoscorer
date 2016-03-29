@@ -35,9 +35,11 @@ classdef SVM < Classifier
             featureset = [featureset{:}]';
         end
         function plot(self)
-            sv = self.Model.SupportVectors;
-            % Plot vectors
-            plot(sv(:,1),sv(:,2),'s','MarkerEdgeColor',[0.1 0.1 0.1],'MarkerSize',9,'LineWidth',1)
+            for f = fieldnames(self.Model)
+                sv = self.Model.(f{:}).SupportVectors;
+                % Plot vectors
+                plot(sv(:,1),sv(:,2),'s','MarkerEdgeColor',[0.1 0.1 0.1],'MarkerSize',9,'LineWidth',1)
+            end
         end
     end
 end
